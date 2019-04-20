@@ -3,8 +3,8 @@ package texasholdem;
 public class CommandPrompt {
     private static boolean enable;
     private static HoldemGame game;
-    private boolean end;
-    private int numbersOfPlayers;
+    private static boolean end;
+    private static int numbersOfPlayers;
 
     CommandPrompt() {
         enable = false;
@@ -17,7 +17,7 @@ public class CommandPrompt {
         return end;
     }
 
-    public void comm(String string) throws Exception {
+    public static void comm(String string) throws Exception {
         if (enable) {
             System.out.print("debug:");
         }
@@ -38,6 +38,7 @@ public class CommandPrompt {
                 break;
             case "start":
             case "run":
+                game.setStatus(GameStatus.ROUNDONE);
                 game.run();
                 break;
             case "restart":
@@ -112,7 +113,7 @@ public class CommandPrompt {
         return 0;
     }
 
-    public static void inGameComm(String comm) {
+    public static void inGameComm(String comm) throws Exception{
         String[] rawC = comm.split(" ");
 
         switch (rawC[0]) {
@@ -123,6 +124,12 @@ public class CommandPrompt {
                 if (rawC[1].equals("cards")) {
                     game.newCards();
                 }
+                break;
+            case "restart":
+                CommandPrompt.comm(rawC[0]);
+                break;
+            case "stop":
+                game.setStatus(GameStatus.BREAK);
                 break;
             case "exit":
                 enable = false;

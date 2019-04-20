@@ -23,8 +23,7 @@ public class HoldemGame {
         status = GameStatus.BREAK;
         pool = 0;
         sBlindBets = 2;
-        roundHighest = 0;
-        count = 0;
+        reset();
 
         for (int i = 0; i < numOfPlayers; i++) {
             players.add(new Player());
@@ -37,6 +36,10 @@ public class HoldemGame {
         return status;
     }
 
+    public void setStatus(GameStatus status) {
+        this.status = status;
+    }
+
     public void shuffleCards() {
         playingCards.shuffleCards();
     }
@@ -46,11 +49,10 @@ public class HoldemGame {
     }
 
     public void run() throws Exception {
-        status = GameStatus.ROUNDONE;
         while (status == GameStatus.ROUNDONE) {
             roundOne(GameStatus.ROUNDONE);
         }
-        if (status != GameStatus.BREAK) {
+        if (status == GameStatus.ROUNDTWO) {
             roundTwo();
         }
         if (status != GameStatus.BREAK) {
@@ -71,29 +73,29 @@ public class HoldemGame {
 
     private void roundOne(GameStatus round) throws Exception {
 
-        playingCards.shuffleCards();
-        roundHighest = sBlindBets;
-
-        for (int i = 0; i < 5; i++) {
-            deskCards.passCard(playingCards.getFirstCard());
-
-            if (i < 3) {
-                deskCards.changeCardFaceAt(i);
-            }
-        }
-
-        for (int i = 0; i < 2; i++) {
-            for (Player player : players) {
-                Card card = playingCards.getFirstCard();
-                player.passCard(card);
-            }
-        }
-
         if (count == 0) {
+            playingCards.shuffleCards();
+            roundHighest = sBlindBets;
+
+            for (int i = 0; i < 5; i++) {
+                deskCards.passCard(playingCards.getFirstCard());
+
+                if (i < 3) {
+                    deskCards.changeCardFaceAt(i);
+                }
+            }
+
+            for (int i = 0; i < 2; i++) {
+                for (Player player : players) {
+                    Card card = playingCards.getFirstCard();
+                    player.passCard(card);
+                }
+            }
+
             displayGameTable(round);
         }
 
-        playerLoops(round);
+        playerLoops(round, roundHighest);
     }
 
     private void roundTwo() throws Exception {
@@ -121,17 +123,11 @@ public class HoldemGame {
         ArrayList<Card> cards = new ArrayList<>();
     }
 
-    private void playerLoops(GameStatus round) throws Exception {
-        ArrayList<Player> availablePlayers = new ArrayList<>();
-        for (Player player : players) {
-            if (player.isActive()) {
-                availablePlayers.add(player);
-            }
-        }
-
-        if (currentPlayer.getRoundCredit(round) != roundHighest && currentPlayer.isActive()) {
+    private void playerLoops(GameStatus round, int roundHighest) throws Exception{
+        reset();
+        if (currentPlayer.getRoundCredit(round) == roundHighest && !currentPlayer.isActive()) {
             //big blind bets
-            if (count++ == 1) {
+            if (count++==1) {
                 if (roundHighest < sBlindBets * 2) {
                     roundHighest = sBlindBets * 2;
                 }
@@ -140,23 +136,23 @@ public class HoldemGame {
             if (!currentPlayer.isActive()) {
                 for (Player player : players) {
                     if (player.isActive()) {
-                        currentPlayer = nextPlayer(availablePlayers);
+                        currentPlayer = getNextPlayer();
                         break;
                     }
                 }
                 status = GameStatus.BREAK;
             }
             //start
-            CommandPrompt.askForInt("Pass to player " + currentPlayer.getINDEX() + "\n enter to continue.\n\n");
+            CommandPrompt.askForInt("Pass to player " + currentPlayer.getINDEX() +"\n enter to continue.\n\n\n");
             displayGameTable(round);
             currentPlayer.playRound(roundHighest, pool, round);
-            if (!currentPlayer.isActive()) {
-                currentPlayer = nextPlayer(availablePlayers);
+            if (!currentPlayer.isActive()){
+                currentPlayer = getNextPlayer();
                 System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
             }
             roundHighest = currentPlayer.getRoundCredit(round);
 
-            currentPlayer = nextPlayer(availablePlayers);
+            currentPlayer = getNextPlayer();
             System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         } else {
             status = GameStatus.ROUNDTWO;
@@ -210,8 +206,14 @@ public class HoldemGame {
         }
     }
 
-    private Player nextPlayer(ArrayList<Player> availablePlayers) {
-        return players.get(counter(currentPlayer.getINDEX(), availablePlayers.size()));
+    private Player getNextPlayer() {
+        if (currentPlayer.getINDEX() + 1 > players.size()) {
+            // index 0
+            return players.get(0);
+        } else {
+            // index ++
+            return players.get(currentPlayer.getINDEX());
+        }
     }
 
     private void reset() {
