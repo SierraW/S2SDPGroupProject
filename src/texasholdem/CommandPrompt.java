@@ -9,6 +9,7 @@ public class CommandPrompt {
     InGameDebugger debugger;
     GameVisualizer gv;
     GameStatus gameStatus = GameStatus.BREAK;
+    private boolean hasRan = false;
 
     CommandPrompt() {
         enable = false;
@@ -42,45 +43,58 @@ public class CommandPrompt {
                 System.out.println("Debug mode enable");
                 enable = true;
                 break;
-            case "start":
-            case "restart":
+            case "shuffle":
+            case "srun":
+                game.newCard();
+                game.shuffle();
+                game.shuffle();
+                game.shuffle();
+                System.out.println("Successfully shuffled.");
+                if (rawComm.length > 1) {
+                    if (!rawComm[1].equals("run") && !rawComm[0].equals("srun")) {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            case "run":
+                hasRan = true;
                 try {
                     System.out.println();
                     game.newGame();
                     game.setStartsAt(game.getGameCount() % numbersOfPlayers);
                     game.run();
                     System.out.println("Game Start!");
-                    System.out.println(gv.startRoundMessage(GameStatus.ROUNDONE));;
+                    System.out.println(gv.startRoundMessage(GameStatus.ROUNDONE));
+
                     viewGameTable();
                     gameStatus = GameStatus.ROUNDONE;
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
-                break;
-            case "run":
-            case "r":
-                try {
-                    play();
-                    if (game.run()) {
-                        System.out.println("Successfully run.");
-                        if (game.getStatus() != gameStatus) {
-                            gameStatus = game.getStatus();
-                            System.out.println(gv.startRoundMessage(gameStatus));
-                        }
-                        viewGameTable();
-                    } else {
-                        System.out.println("Run unsuccessful");
+                if (rawComm.length > 2) {
+                    if (!rawComm[2].equals("start")) {
+                        break;
                     }
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                } else if (rawComm.length > 1) {
+                    if (!rawComm[1].equals("start")) {
+                        break;
+                    }
+                } else {
+                    break;
                 }
-                break;
-            case "continuerun":
-            case "crun":
+            case "start":
+                if (!hasRan) {
+                    System.out.println("Please \"run\" first.");
+                    break;
+                }
                 try {
                     boolean condition = true;
                     while (condition) {
-                        play();
+                        if (!play()) {
+                            condition = false;
+                            continue;
+                        }
                         if (game.run()) {
                             if (game.getStatus() != gameStatus) {
                                 gameStatus = game.getStatus();
@@ -99,13 +113,36 @@ public class CommandPrompt {
                     System.out.println(e.getMessage());
                 }
                 break;
+            case "runOnce":
+            case "r1":
+                try {
+                    if (!play()) {
+                        break;
+                    }
+                    if (game.run()) {
+                        System.out.println("Successfully run.");
+                        if (game.getStatus() != gameStatus) {
+                            gameStatus = game.getStatus();
+                            System.out.println(gv.startRoundMessage(gameStatus));
+                            if (gameStatus == GameStatus.CHECK) {
+                                viewGameTable();
+                            }
+                        }
+                        viewGameTable();
+                    } else {
+                        System.out.println("Run unsuccessful");
+                    }
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+                break;
             case "end":
                 end = true;
                 break;
             case "help":
-                System.out.println("start\nend\nhelp\nset [numbers of player]\ncredit [player index starts at 1] [amounts of credit]\n" +
+                System.out.println("shuffle\nsrun\nrun\nstart\nrunOnce\nhelp\nset [numbers of player]\ncredit [player index starts at 1] [amounts of credit]\n" +
                         "addcredit [player index starts at 1] [amount of credit]\nprint (display card set at borad)\nviewplayer [player index starts at 1]\n" +
-                        "display (view all players)\nshuffle\nnewcard\nsetname [player index starts at 1] [name]\nsmallblindbet [amount of blind bet]\n" +
+                        "display (view all players)\nnewcard\nsetname [player index starts at 1] [name]\nsmallblindbet [amount of blind bet]\n" +
                         "startsat [player index]\n");
                 break;
             case "set":
@@ -166,10 +203,6 @@ public class CommandPrompt {
             case "dis":
                 viewGameTable();
                 break;
-            case "shuffle":
-                game.shuffle();
-                System.out.println("Successfully shuffled.");
-                break;
             case "newcard":
                 game.newCard();
                 break;
@@ -181,6 +214,19 @@ public class CommandPrompt {
                     viewGameTable();
                 } catch (Exception e) {
                     System.out.println("Set name fail, please try again.");
+                }
+                break;
+            case "setNames":
+            case "setns":
+            case "stns":
+                try {
+                    for (int i = 1; i < rawComm.length; i++) {
+                        game.setName(i, rawComm[i]);
+                    }
+                    System.out.print("Set name successful!\n");
+                    viewGameTable();
+                } catch (Exception e) {
+                    System.out.println("Set names fail, please try again.");
                 }
                 break;
             case "smallblindbet":
@@ -199,28 +245,35 @@ public class CommandPrompt {
                     System.out.println("Set starts at fail, please try again.");
                 }
                 break;
+            case "asciimode":
+                gv.setASCIIMode(true);
+                System.out.println("Enter ASCII mode.");
+                break;
+            case "emojimode":
+                gv.setASCIIMode(false);
+                System.out.println("Enter Emoji mode.");
+                break;
             default:
                 System.out.println("Unknown Command, type \"help\" for more.");
 
         }
     }
 
-    public void play() throws Exception {
-        roundStart(game.getCurrentPlayer());
-
-        viewGameTable();
-        playRound(game.getCurrentPlayer(), game.getRoundHighest(), game.getStatus());
-    }
-
-    public void viewGameTable() {
-        gv.deskVisualizer(game.getDeskPlayer());
-        gv.playersVisualizer(game.getPlayers(), gameStatus, game.getCurrentPlayer(), game.getPlacedCredit());
+    public boolean play() throws Exception {
+        if (roundStart(game.getCurrentPlayer())) {
+            viewGameTable();
+            if (game.getCurrentPlayer().getCredit() > 0) {
+                playRound(game.getCurrentPlayer(), game.getRoundHighest(), game.getStatus());
+            }
+            return true;
+        }
+        return false;
     }
 
     public void playRound(Player player, int highest, GameStatus round) throws Exception {
         System.out.print(player.getName() + " (Player " + player.getINDEX() + ") Card:  ");
-        gv.cardVisualizer(player.getCards(), true);
-        System.out.println("Your credit: " + player.getCredit() + "  round highest bet: " + highest);
+        System.out.print(gv.cardVisualizer(player.getCards(), true));
+        System.out.println(" Your credit: " + player.getCredit() + "  round highest bet: " + highest);
         System.out.println("Your current bet: " + player.getRoundCredit(round));
 
         while (!(game.placeBet(inputHandleSystem.getInt("how many bets you want to add? (at least " + (game.getRoundHighest() - player.getRoundCredit(round)) + "): \n", Domain.hasMinimum, 0)))) {
@@ -233,11 +286,18 @@ public class CommandPrompt {
         System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     }
 
-    public void roundStart(Player currentPlayer) throws Exception {
-        System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    public boolean roundStart(Player currentPlayer) throws Exception {
 
-        debugger.getInput("\n\n\nPass to player " + currentPlayer.getINDEX() + "\n\n\ntype enter to continue.\n\n\n"); //todo remove debug
+        debugger.getInput("\n\n\nPass to " + currentPlayer.getName() + " (player " + currentPlayer.getINDEX() + ")\n\n\ntype enter to continue.\n\n\n"); //todo remove debug
+        if (game.getStatus() == GameStatus.BREAK) {
+            return false;
+        }
 
         System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        return true;
+    }
+
+    public void viewGameTable() {
+        gv.viewGameTable(game.getDeskPlayer(), game.getPlayers(), game.getStatus(), game.getCurrentPlayer(), game.getPlacedCredit());
     }
 }

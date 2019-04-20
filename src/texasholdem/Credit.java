@@ -89,7 +89,7 @@ public class Credit {
         }
     }
 
-    private void setCreditAt(int credit, GameStatus round) {
+    void setCreditAt(int credit, GameStatus round) {
         switch (round) {
             case ROUNDONE:
                 roundOne += credit;

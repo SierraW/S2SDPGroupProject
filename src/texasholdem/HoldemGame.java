@@ -38,7 +38,7 @@ public class HoldemGame {
 
     public void newGame() throws IllegalStateException {
         Player.indexFactory = 0;
-        if (!playingCards.isFullSet()) {
+        if (!playingCards.isEnoughSet(players.size())) {
             playingCards = new PlayingCards();
         }
         deskCards = new Player();
@@ -46,17 +46,16 @@ public class HoldemGame {
         deskCards.resetRoundCredit();
         status = GameStatus.BREAK;
         gameCount += 1;
+        int count = 0;
         for (Player player : players) {
             player.clearCards();
-            int count = 0;
-            if (player.getCredit() > sBlindBets) {
-                count += 1;
-                player.setActive(true);
-                player.resetRoundCredit();
-            }
-            if (count == 0) {
-                throw new IllegalStateException("Not enough players");
-            }
+            count += 1;
+            player.setActive(true);
+            player.resetRoundCredit();
+
+        }
+        if (count < 2) {
+            throw new IllegalStateException("Not enough players");
         }
         currentPlayer = players.get(startsAt);
         placedCredit = -2;
@@ -168,8 +167,7 @@ public class HoldemGame {
     private void removeBadPlayer() {
         for (Player player : players) {
             if (player.getCredit() < sBlindBets) {
-                players.remove(player);
-                fixPlayersIndex();
+                player.setActive(false);
             }
         }
 
@@ -183,7 +181,7 @@ public class HoldemGame {
         players = newPlayers;
     }
 
-    public boolean run() throws Exception {
+    public boolean run() {
         if (status == GameStatus.BREAK) {
             removeBadPlayer();
             if (players.size() < 2) {
@@ -206,7 +204,7 @@ public class HoldemGame {
         return false;
     }
 
-    private void roundOne() throws Exception {
+    private void roundOne() {
 
         roundHighest = sBlindBets;
 
@@ -226,7 +224,7 @@ public class HoldemGame {
         }
     }
 
-    private void roundTwo() throws Exception {
+    private void roundTwo() {
         //false safe
         if (oneAndOnly()) {
             status = GameStatus.CHECK;
@@ -236,7 +234,7 @@ public class HoldemGame {
         deskCards.changeCardFaceAt(3);
     }
 
-    private void roundThree() throws Exception {
+    private void roundThree() {
         //false safe
         if (oneAndOnly()) {
             status = GameStatus.CHECK;
@@ -256,7 +254,7 @@ public class HoldemGame {
         return count == 1;
     }
 
-    private boolean playerLoops() throws Exception {
+    private boolean playerLoops() {
         if (currentPlayer.getRoundCredit(status) < roundHighest) {
             currentPlayer.setActive(false);
             currentPlayer = getNextPlayer();
@@ -270,7 +268,7 @@ public class HoldemGame {
             }
         }
 
-        if (count++ < activePlayersCount - 1 || getNextPlayer().getRoundCredit(status) != roundHighest) {
+        if (count++ < activePlayersCount - 1 || getNextPlayer().getRoundCredit(status) != currentPlayer.getRoundCredit(status)) {
             if (!currentPlayer.isActive()) { //todo remove fail safe
                 currentPlayer = getNextPlayer();
             }
@@ -324,7 +322,7 @@ public class HoldemGame {
             placedCredit = bets;
             return true;
         }
-        placedCredit  = -1;
+        placedCredit = -1;
         return false;
     }
 
@@ -410,9 +408,9 @@ public class HoldemGame {
 
         for (Player player : remainingPlayers) {
             ReturnTwo<ArrayList<Card>, HandRanking> result = cardCheck.check(combineCards(player));
-            player.setCardPoint(cardCheck.getCP(result.VALUE, result.CARDS));
+            player.setCardPoint(Long.parseLong(cardCheck.getCP(result.VALUE, result.CARDS), 16));
 
-            outStr += ("Player " + player.getINDEX() + " score: " + player.getCardPoint() + "\n");
+            outStr += (player.getName() + " (Player " + player.getINDEX() + ") score: 0x" + Long.toHexString(player.getCardPoint()) + "\n");
             for (Card card : player.getCards()) {
                 outStr += (card.printCard(true) + " ");
             }
@@ -432,9 +430,9 @@ public class HoldemGame {
         winners = new ArrayList<>();
 
         winners.add(remainingPlayers.get(0));
-        for (int i = 0; i < remainingPlayers.size() - 1; i++) {
-            if (remainingPlayers.get(i).getCardPoint().equals(remainingPlayers.get(i + 1).getCardPoint())) {
-                winners.add(remainingPlayers.get(i + 1));
+        for (int i = 1; i < remainingPlayers.size(); i++) {
+            if (remainingPlayers.get(i - 1).getCardPoint() == (remainingPlayers.get(i).getCardPoint())) {
+                winners.add(remainingPlayers.get(i));
             }
         }
 

@@ -2,6 +2,7 @@ package texasholdem;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 class ReturnTwo<A, B> {
     final A CARDS;
@@ -109,13 +110,15 @@ public class CardCheck {
 
     ReturnTwo<ArrayList<Card>, Integer[]> getKind(ArrayList<Card> cards) {
         ArrayList<Card> kindCards = new ArrayList<>();
-        ArrayList<Integer> highestCountsArr = new ArrayList<>();
-        highestCountsArr.add(1);    //make sure array list has more than one elements
         sortByRank(cards);
         int kindCount = 1;
         ArrayList<Card> kindCard1 = new ArrayList<>();
         ArrayList<Card> kindCard2 = new ArrayList<>();
         ArrayList<Card> kindCard3 = new ArrayList<>();
+
+        ArrayList<ArrayList<Card>> lists = new ArrayList<>();
+
+
         Card heap;
 
         for (int i = 1; i < cards.size(); i++) {
@@ -138,7 +141,6 @@ public class CardCheck {
 
             } else {
                 if (kindCount >= 2 && i < cards.size() - 1) {
-                    highestCountsArr.add(kindCount);
                     if (kindCard1.size() == 0) {
                         kindCard1 = new ArrayList<>(kindCards);
 
@@ -168,19 +170,33 @@ public class CardCheck {
             kindCards = new ArrayList<>();
         }
 
-        highestCountsArr.sort(Collections.reverseOrder());
+        lists.add(kindCard1);
+        lists.add(kindCard2);
+        lists.add(kindCard3);
+        Collections.sort(lists, new Comparator<ArrayList>(){
+            public int compare(ArrayList a1, ArrayList a2) {
+                return a2.size() - a1.size();
+            }
+        });
 
-        Integer[] integers = highestCountsArr.toArray(new Integer[highestCountsArr.size()]);
+        Integer[] integers = new Integer[3];
+        integers[0] = lists.get(0).size();
+        integers[1] = lists.get(1).size();
+        integers[2] = lists.get(2).size();
 
-        if (highestCountsArr.get(0) == 4) {
-            return new ReturnTwo<>(kindCard1, integers);
-        } else if (highestCountsArr.get(0) == 2 && highestCountsArr.get(1) == 2) {
-            kindCard1.addAll(kindCard2);
-            return new ReturnTwo<>( kindCard1 , integers);
+
+        if (lists.get(0).size() == 4) {
+            return new ReturnTwo<>(lists.get(0), integers);
+        } else if (lists.get(0).size() == 2 && lists.get(1).size() == 2) {
+            lists.get(0).addAll(lists.get(1));
+            return new ReturnTwo<>( lists.get(0) , integers);
         }
 
+        lists.get(1).addAll(lists.get(2));
 
-        return new ReturnTwo<>(kindCards, integers);
+        lists.get(0).addAll(lists.get(1));
+
+        return new ReturnTwo<>(lists.get(0), integers);
     }
 
     ReturnTwo<ArrayList<Card>, HandRanking> check(ArrayList<Card> cards) {
@@ -257,8 +273,8 @@ public class CardCheck {
     }
 
     public String getCP(HandRanking hr, ArrayList<Card> bestFive) {
-        StringBuilder totalCP = new StringBuilder();
-        totalCP.append(hr.ordinal());
+        String totalCP = "";
+        totalCP = String.valueOf(hr.ordinal()+1);
 
         int cp = 0;
 
@@ -269,43 +285,43 @@ public class CardCheck {
             case FOUROFAKIND:
             case STRAIGHTFLUSH:
                 for (int i = 0; i < bestFive.size(); i++) {
-                    totalCP.append(CalCP(bestFive.get(i), false));
+                    totalCP += (CalCP(bestFive.get(i), false));
                 }
-                return totalCP.toString();
+                return totalCP;
             case ONEPAIR:
                 for (int i = 0; i < bestFive.size(); i++) {
                     if (i < 2) {
-                        totalCP.append(CalCP(bestFive.get(i), true));
+                        totalCP += (CalCP(bestFive.get(i), true));
                     } else {
-                        totalCP.append(CalCP(bestFive.get(i), false));
+                        totalCP += (CalCP(bestFive.get(i), false));
                     }
                 }
-                return totalCP.toString();
+                return totalCP;
             case TWOPAIR:
                 for (int i = 0; i < bestFive.size(); i++) {
                     if (i < 4) {
-                        totalCP.append(CalCP(bestFive.get(i), true));
+                        totalCP += (CalCP(bestFive.get(i), true));
                     } else {
-                        totalCP.append(CalCP(bestFive.get(i), false));
+                        totalCP += (CalCP(bestFive.get(i), false));
                     }
                 }
-                return totalCP.toString();
+                return totalCP;
             case STRAIGHT:
             case FLUSH:
             case ROYALFLUSH:
             default:
                 for (int i = 0; i < bestFive.size(); i++) {
-                    totalCP.append(CalCP(bestFive.get(i), true));
+                    totalCP += (CalCP(bestFive.get(i), true));
                 }
-                return totalCP.toString();
+                return totalCP;
         }
     }
 
     private String CalCP(Card card, boolean ignoreSuit) {
         if (ignoreSuit) {
-            return card.getValue().toChar() + "0";
+            return card.getValue().toHex() + "0";
         }
-        return card.getValue().toChar() + (card.getSuit().ordinal() + 1);
+        return card.getValue().toHex() + (card.getSuit().ordinal() + 1);
     }
 
 }

@@ -1,20 +1,30 @@
 package texasholdem;
 
-import jdk.internal.util.xml.impl.Input;
-
 import java.util.ArrayList;
 
 public class GameVisualizer {
 
-    void cardVisualizer(ArrayList<Card> cards, boolean isForceViewCard) {
+    private boolean isASCIIMode = false;
+
+    public void setASCIIMode(boolean ASCIIMode) {
+        isASCIIMode = ASCIIMode;
+    }
+
+    String cardVisualizer(ArrayList<Card> cards, boolean isForceViewCard) {
+        StringBuffer outputStr = new StringBuffer();
         for (Card card : cards) {
-            System.out.print(card.printCard(isForceViewCard) + " ");
+            if (isASCIIMode) {
+                outputStr.append(" " + card.printCardText(isForceViewCard) + " ");
+            } else {
+                outputStr.append(" " + card.printCard(isForceViewCard) + " ");
+            }
         }
+        return outputStr.toString();
     }
 
     void deskVisualizer(Player deskPlayer) {
-        System.out.print(GameVisualizer.viewPlayerCard(deskPlayer));
-        cardVisualizer(deskPlayer.getCards(), false);
+        System.out.println("Board:");
+        System.out.print(cardVisualizer(deskPlayer.getCards(), false));
         System.out.println("\n Total Pool: " + deskPlayer.getCredit());
     }
 
@@ -36,7 +46,7 @@ public class GameVisualizer {
                 int previousPlayerIndex;
                 System.out.println(round.name());
                 for (int i = 0; i < players.size(); i++) {
-                    System.out.print(players.get(i).getName() + " (Player " + players.get(i).getINDEX() + ") :" + players.get(i).getCards() + "  Total credit: " + players.get(i).getCredit() + " Current Round Bet: " + players.get(i).getRoundCredit(round) + " Total Game Bet: " + players.get(i).getRoundCredit(GameStatus.CHECK) + " ");
+                    System.out.printf("%7s (Player %2d): %s    Total credit: %5d,  Current round bet: %5d,  Total game bet: %5d  ", players.get(i).getName(), players.get(i).getINDEX(), cardVisualizer(players.get(i).getCards(),false) , players.get(i).getCredit(),players.get(i).getRoundCredit(round),players.get(i).getRoundCredit(GameStatus.CHECK));
                     if (currentPlayer.getINDEX() == players.get(0).getINDEX()) {
                         previousPlayerIndex = players.size() - 1;
                     } else {
@@ -56,6 +66,7 @@ public class GameVisualizer {
                     if (currentPlayer.getINDEX() == players.get(i).getINDEX()) {
                         System.out.print("       >>>>>>>Your Turn<<<<<<<");
                     }
+                    System.out.println();
                     System.out.println();
                 }
                 break;
@@ -185,5 +196,10 @@ public class GameVisualizer {
             outStr += (card.printCard(true) + " ");
         }
         return outStr;
+    }
+
+    public void viewGameTable(Player deskPlayer, ArrayList<Player> players, GameStatus round, Player currentPlayer, int placedCredit) {
+        deskVisualizer(deskPlayer);
+        playersVisualizer(players, round, currentPlayer, placedCredit);
     }
 }

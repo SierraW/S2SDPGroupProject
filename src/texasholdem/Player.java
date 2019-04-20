@@ -5,15 +5,20 @@ import java.util.ArrayList;
 public class Player implements Comparable<Player> {
     private final int INDEX;
     private ArrayList<Card> cards;
-    private Credit credit;
+    protected Credit credit;
     private String name;
     private boolean active;
-    InputHandleSystem inputHandleSystem = new InputHandleSystem();
-    private String cardPoint;
+    private long cardPoint;
 
     @Override
     public int compareTo(Player o) {
-        return o.cardPoint.compareTo(this.cardPoint);
+        if (o.cardPoint - this.cardPoint < 0) {
+            return -1;
+        } else if (o.cardPoint - this.cardPoint >0) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     Player() {
@@ -23,7 +28,7 @@ public class Player implements Comparable<Player> {
         credit.total = 100;
         name = "";
         active = true;
-        cardPoint = "";
+        cardPoint = 0;
     }
 
     Player(Credit credit) {
@@ -32,7 +37,7 @@ public class Player implements Comparable<Player> {
         this.credit = credit;
         name = "";
         active = true;
-        cardPoint = "";
+        cardPoint = 0;
     }
 
     Player(Player player) {
@@ -96,11 +101,11 @@ public class Player implements Comparable<Player> {
         cards.sort(Card.Comparators.INDEX);
     }
 
-    public void setCardPoint(String cardPoint) {
+    public void setCardPoint(long cardPoint) {
         this.cardPoint = cardPoint;
     }
 
-    public String getCardPoint() {
+    public long getCardPoint() {
         return cardPoint;
     }
 

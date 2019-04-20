@@ -5,7 +5,7 @@ public class Tester {
         CommandPrompt game = new CommandPrompt();
         InputHandleSystem input = new InputHandleSystem();
 
-        System.out.println("Welcomes Message");
+        System.out.println("Texas Hold'em\ntype \"set [numbersOfPlayers]\" type \"srun start\" to run.");
         game.viewGameTable();
         while (!game.isEnded()) {
             game.comm(input.getLine("game:\\"));

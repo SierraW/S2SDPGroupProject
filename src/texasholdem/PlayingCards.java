@@ -26,12 +26,12 @@ public class PlayingCards {
         }
     }
 
-    public boolean isFullSet() {
-        return cards.size() == 52;
+    public boolean isEnoughSet(int numbersOfPlayers) {
+        return cards.size() >= numbersOfPlayers * 2 + 5;
     }
 
 
-    public void viewCardSet() {
+    public void viewCardSet() { // todo remove debug
         for (int i=0; i< cards.size(); i++) {
             if (i % 10 != 9) {
                 System.out.print(cards.get(i).getSuit().toString() + cards.get(i).getValue().toString() + " ");

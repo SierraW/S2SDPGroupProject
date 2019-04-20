@@ -1,5 +1,7 @@
 package texasholdem;
 
+import com.sun.istack.internal.NotNull;
+
 import java.util.Comparator;
 
 public class Card implements Comparable<Card>{
@@ -13,11 +15,11 @@ public class Card implements Comparable<Card>{
         return Comparators.INDEX.compare(this, card);
     }
 
-    public Card(int vIndex, int sIndex) {
+    public Card(@NotNull int vIndex, int sIndex) {
         this(sIndex + vIndex * 10);
     }
 
-    public Card(int index){
+    public Card(@NotNull int index){
         this.INDEX = index;
         SUIT = Suit.values()[index%10];
         VALUE = Value.values()[(index - (index % 10))/10];
@@ -52,6 +54,16 @@ public class Card implements Comparable<Card>{
             return "🎴";
         }
         return this.SUIT.toString()+this.VALUE.toString();
+    }
+
+    public String printCardText(boolean isForceViewCard) {
+        if (isForceViewCard) {
+            return this.SUIT.toASCII()+this.VALUE.toString();
+        }
+        if (!isFaceUp()) {
+            return "Card";
+        }
+        return this.SUIT.toASCII()+this.VALUE.toString();
     }
 
     @Override

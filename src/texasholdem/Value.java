@@ -29,36 +29,36 @@ public enum Value {
         }
     }
 
-    public String toChar() {
+    public String toHex() {
         switch (this) {
             case ACE:
-                return "M";
-            case TWO:
-                return "A";
-            case THREE:
-                return "B";
-            case FOUR:
-                return "C";
-            case FIVE:
                 return "D";
+            case TWO:
+                return "1";
+            case THREE:
+                return "2";
+            case FOUR:
+                return "3";
+            case FIVE:
+                return "4";
             case SIX:
-                return "E";
+                return "5";
             case SEVEN:
-                return "F";
+                return "6";
             case EIGHT:
-                return "G";
+                return "7";
             case NINE:
-                return "H";
+                return "8";
             case TEN:
-                return "I";
+                return "9";
             case JACK:
-                return "J";
+                return "A";
             case QUEEN:
-                return "K";
+                return "B";
             case KING:
-                return "L";
+                return "C";
             default:
-                return "error";
+                return "0";
         }
     }
 }

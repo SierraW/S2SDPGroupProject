@@ -22,4 +22,23 @@ public enum Suit {
                 return "error";
         }
     }
+
+    public String toASCII() {
+        switch (this) {
+            case SPADE:
+                return "Spade";
+
+            case HEART:
+                return "Heart";
+
+            case CLUB:
+                return "Club";
+
+            case DIAMOND:
+                return "Diamond";
+
+            default:
+                return "error";
+        }
+    }
 }
