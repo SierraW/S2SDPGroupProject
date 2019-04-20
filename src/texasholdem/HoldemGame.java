@@ -219,7 +219,7 @@ public class HoldemGame {
                 activePlayersCount++;
             }
         }
-        while (count < activePlayersCount || currentPlayer.getRoundCredit(round) != roundHighest) {
+        while (count < activePlayersCount || !currentPlayer.isActive() || currentPlayer.getRoundCredit(round) != roundHighest) {
             //big blind bets
             if (count++ == 1 && round == GameStatus.ROUNDONE) {
                 if (roundHighest < sBlindBets * 2) {
@@ -236,15 +236,14 @@ public class HoldemGame {
                 continue;
             }
             //start
-            debugger.getInput("Pass to player " + currentPlayer.getINDEX() + "\n enter to continue.\n\n\n\n\n\n\n"); //todo remove debug
+            debugger.getInput("\n\n\nPass to player " + currentPlayer.getINDEX() + "\n\n\ntype enter to continue.\n\n\n"); //todo remove debug
             if (status == GameStatus.BREAK) {
                 break;
             }
-            System.out.println(displayGameTable(round));
+            System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + displayGameTable(round, true));
             currentPlayer.playRound(roundHighest, round);
             if (!currentPlayer.isActive()) {
                 currentPlayer = getNextPlayer();
-                activePlayersCount--;
                 System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
                 continue;
             }
@@ -288,6 +287,10 @@ public class HoldemGame {
     }
 
     String displayGameTable(GameStatus round) {
+        return displayGameTable(round, false);
+    }
+
+    String displayGameTable(GameStatus round, boolean inPlayingRound) {
         String outStr = "";
         if (round == GameStatus.DEBUG) {
             outStr += deskCards.viewCard();
@@ -320,7 +323,15 @@ public class HoldemGame {
         outStr += deskCards.viewPlayerCard();
 
         for (Player player : players) {
-            outStr += player.viewPlayer(round);
+            if (inPlayingRound) {
+                if (currentPlayer == player) {
+                    outStr += "       >>>>>>>Your Turn<<<<<<<\n";
+                } else {
+                    outStr += player.viewPlayer(round);
+                }
+            } else {
+                outStr += player.viewPlayer(round);
+            }
         }
 
         return outStr + "\n";

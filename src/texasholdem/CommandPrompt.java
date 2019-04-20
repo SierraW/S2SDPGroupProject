@@ -39,11 +39,15 @@ public class CommandPrompt {
             case "start":
             case "run":
             case "restart":
-                System.out.println();
-                game.setStartsAt(game.getGameCount() % numbersOfPlayers);
-                game.newGame();
-                game.setStatus(GameStatus.ROUNDONE);
-                game.run();
+                try {
+                    System.out.println();
+                    game.setStartsAt(game.getGameCount() % numbersOfPlayers);
+                    game.newGame();
+                    game.setStatus(GameStatus.ROUNDONE);
+                    game.run();
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                }
                 break;
             case "end":
                 end = true;

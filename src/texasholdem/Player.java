@@ -38,10 +38,15 @@ public class Player implements Comparable<Player> {
                 outStr += ("  ");
             }
         }
-        if (round == GameStatus.BREAK) {
-            outStr += ("    Player total credit: " + credit.total + "\n");
-        } else {
-            outStr += ("Total bet: " + credit.round + "    Player total credit: " + credit.total + "\n");
+        switch (round) {
+            case BREAK:
+                outStr += ("    Player total credit: " + credit.total + "\n");
+                break;
+            case CHECK:
+                outStr += ("Total bet: " + credit.round + "    Player total credit: " + credit.total + "\n");
+                break;
+                default:
+                    outStr += ("Total bet: " + credit.round + "    current round credit: " + credit.creditAt(round)+ "    Player total credit: " + credit.total + "\n");
         }
         return outStr;
     }
@@ -67,11 +72,7 @@ public class Player implements Comparable<Player> {
     String viewCard() {
         String outStr = "";
         for (Card card : cards) {
-            card.setFaceUp(true);
-        }
-        outStr = this.viewPlayerCard();
-        for (Card card : cards) {
-            card.setFaceUp(false);
+            outStr += (card.toString() + " ");
         }
         return outStr;
     }
@@ -113,11 +114,12 @@ public class Player implements Comparable<Player> {
     }
 
     public void playRound(int highest, GameStatus round) throws Exception {
-        System.out.print(this.viewCard());
-        System.out.println("Your credit: " + credit.total + "  current round: " + credit.creditAt(round) + "  round highest bet: " + highest);
+        System.out.print(name + " (Player " + INDEX + ") :\nYour Card:    ");
+        System.out.println(this.viewCard());
+        System.out.println("Your credit: " + credit.total + "  round highest bet: " + highest);
         System.out.println("Your current bet: " + credit.creditAt(round));
 
-        while (!(credit.place(highest, inputHandleSystem.getInt("add bet(at least " + credit.difference(highest, round) + "): \n", Domain.hasMinimum, 0), round))) {
+        while (!(credit.place(highest, inputHandleSystem.getInt("how many bets you want to add? (at least " + credit.difference(highest, round) + "): \n", Domain.hasMinimum, 0), round))) {
             if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y', 'n') == 'y') {
                 active = false;
                 return;
