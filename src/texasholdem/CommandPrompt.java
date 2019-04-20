@@ -1,25 +1,23 @@
 package texasholdem;
 
 public class CommandPrompt {
-    private boolean enable;
-    HoldemGame game;
+    private static boolean enable;
+    private static HoldemGame game;
     private boolean end;
     private int numbersOfPlayers;
-    private GameStatus gameStatus;
 
     CommandPrompt() {
         enable = false;
         numbersOfPlayers = 4;
         game = new HoldemGame(numbersOfPlayers);
         end = false;
-        gameStatus = GameStatus.BREAK;
     }
 
     public boolean isEnded() {
         return end;
     }
 
-    public void comm(String string) throws Exception{
+    public void comm(String string) throws Exception {
         if (enable) {
             System.out.print("debug:");
         }
@@ -55,7 +53,7 @@ public class CommandPrompt {
                 break;
             case "set":
                 if (rawComm[1].matches("\\d{1,2}")) {
-                    if (Integer.parseInt(rawComm[1]) > 17){
+                    if (Integer.parseInt(rawComm[1]) > 17) {
                         System.out.println("set player unsuccessful, number too large.");
                         break;
                     }
@@ -65,6 +63,69 @@ public class CommandPrompt {
                 } else {
                     System.out.println("set player unsuccessful, try again.");
                 }
+                break;
+            default:
+                System.out.println("Unknown Command, type \"help\" for more.");
+
+        }
+    }
+
+    public static boolean askForAns(String message) throws Exception {
+        InputHandleSystem reader = new InputHandleSystem();
+        String command = reader.getLine(message).toLowerCase();
+        String[] rawComm = command.split(" ");
+        String comm = rawComm[0];
+
+        switch (comm) {
+            case "y":
+                return true;
+            case "n":
+                return false;
+            case "comm":
+                enable = true;
+                while (enable) {
+                    inGameComm(reader.getLine("comm:\\"));
+                }
+                break;
+            default:
+                System.out.println("Unknown Command, type \"help\" for more.");
+        }
+        return false;
+    }
+
+    public static int askForInt(String message) throws Exception {
+        InputHandleSystem reader = new InputHandleSystem();
+        String[] command = reader.getLine(message).toLowerCase().split(" ");
+
+        switch (command[0]) {
+            case "comm":
+                enable = true;
+                while (enable) {
+                    inGameComm(reader.getLine("comm:\\"));
+                }
+                break;
+            default:
+                if (command[0].matches("\\d{1,3}")) {
+                    return Integer.parseInt(command[0]);
+                }
+        }
+        return 0;
+    }
+
+    public static void inGameComm(String comm) {
+        String[] rawC = comm.split(" ");
+
+        switch (rawC[0]) {
+            case "shuffle":
+                game.shuffleCards();
+                break;
+            case "new":
+                if (rawC[1].equals("cards")) {
+                    game.newCards();
+                }
+                break;
+            case "exit":
+                enable = false;
                 break;
             default:
                 System.out.println("Unknown Command, type \"help\" for more.");

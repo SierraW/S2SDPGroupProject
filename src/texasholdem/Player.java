@@ -79,8 +79,8 @@ public class Player {
         System.out.println("Your credit: " + credit.total + "\t pool: " + pool + "\t highest bet: " + highest);
         System.out.println("Your current bet: " + credit.creditAt(round));
 
-        while (!(credit.place(highest, inputHandleSystem.getInt("add bet(at least " + credit.difference(highest,round) + "): \n", Domain.hasMinimum, 0), round))){
-            if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y','n') == 'y') {
+        while (!(credit.place(highest, CommandPrompt.askForInt("add bet(at least " + credit.difference(highest,round) + "): \n"), round))){
+            if (CommandPrompt.askForAns("bad input, you sure you want to exit this game? (y/n)\n")) {
                 active = false;
                 return;
             }
