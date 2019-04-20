@@ -61,6 +61,13 @@ public class Credit {
         return false;
     }
 
+    void resetRoundCredit() {
+        round = 0;
+        roundOne = 0;
+        roundTwo = 0;
+        roundThree = 0;
+    }
+
     int creditAt(GameStatus round) throws IllegalArgumentException{
         switch (round) {
             case ROUNDONE:

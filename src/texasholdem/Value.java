@@ -28,4 +28,37 @@ public enum Value {
                 return "error";
         }
     }
+
+    public String toChar() {
+        switch (this) {
+            case ACE:
+                return "M";
+            case TWO:
+                return "A";
+            case THREE:
+                return "B";
+            case FOUR:
+                return "C";
+            case FIVE:
+                return "D";
+            case SIX:
+                return "E";
+            case SEVEN:
+                return "F";
+            case EIGHT:
+                return "G";
+            case NINE:
+                return "H";
+            case TEN:
+                return "I";
+            case JACK:
+                return "J";
+            case QUEEN:
+                return "K";
+            case KING:
+                return "L";
+            default:
+                return "error";
+        }
+    }
 }

@@ -2,63 +2,86 @@ package texasholdem;
 
 import java.util.ArrayList;
 
-public class Player {
+public class Player implements Comparable<Player> {
     private final int INDEX;
     private ArrayList<Card> cards;
     private Credit credit;
-    private int roundPlacedCredit;
+    private String name;
     private boolean active;
     InputHandleSystem inputHandleSystem = new InputHandleSystem();
+    private String cardPoint;
+
+    @Override
+    public int compareTo(Player o) {
+        return o.cardPoint.compareTo(this.cardPoint);
+    }
 
     public Player() {
         INDEX = indexGenerator();
         cards = new ArrayList<>();
         credit = new Credit();
         credit.total = 100;
-        roundPlacedCredit = 0;
+        name = "";
         active = true;
+        cardPoint = "";
     }
 
-    public void viewPlayer(GameStatus round) {
+    String viewPlayer(GameStatus round) {
+        String outStr = "";
         if (INDEX != 0) {
-            System.out.print("Player " + INDEX + ": ");
+            outStr += ( name + " (Player " + INDEX + "): ");
         }
         for (Card card : cards) {
             if (card != null && active) {
-                System.out.print(card + " ");
+                outStr += (card.printCard() + " ");
             } else {
-                System.out.print("\t\t");
+                outStr += ("  ");
             }
         }
-        System.out.println("Total bet: "+ credit.round + "\tCurrent round: " + credit.creditAt(round) + "\tPlayer total credit: " + credit.total);
+        if (round == GameStatus.BREAK) {
+            outStr += ("    Player total credit: " + credit.total + "\n");
+        } else {
+            outStr += ("Total bet: " + credit.round + "    Player total credit: " + credit.total + "\n");
+        }
+        return outStr;
     }
 
-    public void viewPlayerCard() {
+    String viewPlayerCard() {
+        String outSt = "";
         if (INDEX == 0) {
-            System.out.print("Desk    : ");
+            outSt += "Desk:    ";
         } else {
-            System.out.print("Player " + INDEX + ": ");
+            outSt += (name + " (Player " + INDEX + "): ");
         }
         for (Card card : cards) {
             if (card != null) {
-                System.out.print(card + " ");
+                outSt += (card.printCard() + " ");
             }
         }
-        System.out.println();
+        if (INDEX == 0) {
+            outSt += "Pool: " + this.credit.total + "\n";
+        }
+        return outSt + "\n";
     }
 
-    void viewCard() {
-        for (Card card: cards){
+    String viewCard() {
+        String outStr = "";
+        for (Card card : cards) {
             card.setFaceUp(true);
         }
-        this.viewPlayerCard();
-        for (Card card: cards){
+        outStr = this.viewPlayerCard();
+        for (Card card : cards) {
             card.setFaceUp(false);
         }
+        return outStr;
     }
 
     public ArrayList<Card> getCards() {
         return new ArrayList<>(cards);
+    }
+
+    public void clearCards() {
+        cards = new ArrayList<>();
     }
 
     public ArrayList<Card> debugGetCards() { // todo remove debug mothd
@@ -73,7 +96,7 @@ public class Player {
         cards.add(card);
     }
 
-    public int getRoundCredit(GameStatus round) throws IllegalArgumentException{
+    public int getRoundCredit(GameStatus round) throws IllegalArgumentException {
         return credit.creditAt(round);
     }
 
@@ -81,14 +104,21 @@ public class Player {
         this.credit.total = credit;
     }
 
-    public void playRound(int highest, int pool, GameStatus round) throws Exception {
-        this.viewCard();
-        int difference = highest - roundPlacedCredit;
-        System.out.println("Your credit: " + credit.total + "\t pool: " + pool + "\t highest bet: " + highest);
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void playRound(int highest, GameStatus round) throws Exception {
+        System.out.print(this.viewCard());
+        System.out.println("Your credit: " + credit.total + "  current round: " + credit.creditAt(round) + "  round highest bet: " + highest);
         System.out.println("Your current bet: " + credit.creditAt(round));
 
-        while (!(credit.place(highest, inputHandleSystem.getInt("add bet(at least " + credit.difference(highest,round) + "): \n", Domain.hasMinimum, 0), round))){
-            if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y','n') == 'y') {
+        while (!(credit.place(highest, inputHandleSystem.getInt("add bet(at least " + credit.difference(highest, round) + "): \n", Domain.hasMinimum, 0), round))) {
+            if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y', 'n') == 'y') {
                 active = false;
                 return;
             }
@@ -99,6 +129,10 @@ public class Player {
         return active;
     }
 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public void changeCardFaceAt(int index) {
         cards.get(index).setFaceUp(!cards.get(index).isFaceUp());
     }
@@ -107,7 +141,28 @@ public class Player {
         cards.sort(Card.Comparators.INDEX);
     }
 
+    public void setCardPoint(String cardPoint) {
+        this.cardPoint = cardPoint;
+    }
+
+    public String getCardPoint() {
+        return cardPoint;
+    }
+
+    public int getCredit() {
+        return credit.total;
+    }
+
+    public void setCredit(int credit) {
+        this.credit.total += credit;
+    }
+
+    public void resetRoundCredit() {
+        this.credit.resetRoundCredit();
+    }
+
     static int indexFactory = 0;
+
     private static int indexGenerator() {
         return indexFactory++;
     }

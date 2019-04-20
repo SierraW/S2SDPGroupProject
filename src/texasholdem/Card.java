@@ -14,13 +14,13 @@ public class Card implements Comparable<Card>{
     }
 
     public Card(int vIndex, int sIndex) {
-        this(sIndex*100 + vIndex);
+        this(sIndex + vIndex * 10);
     }
 
     public Card(int index){
         this.INDEX = index;
-        SUIT = Suit.values()[(index - (index % 100))/100];
-        VALUE = Value.values()[index % 100];
+        SUIT = Suit.values()[index%10];
+        VALUE = Value.values()[(index - (index % 10))/10];
         faceUp = false;
     }
 
@@ -44,11 +44,15 @@ public class Card implements Comparable<Card>{
         this.faceUp = faceUp;
     }
 
-    @Override
-    public String toString() {
+    public String printCard() {
         if (!isFaceUp()) {
             return " 🎴 ";
         }
+        return this.toString();
+    }
+
+    @Override
+    public String toString() {
         return this.SUIT.toString()+this.VALUE.toString();
     }
 

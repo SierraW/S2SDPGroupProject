@@ -5,14 +5,12 @@ public class CommandPrompt {
     HoldemGame game;
     private boolean end;
     private int numbersOfPlayers;
-    private GameStatus gameStatus;
 
     CommandPrompt() {
         enable = false;
         numbersOfPlayers = 4;
-        game = new HoldemGame(numbersOfPlayers);
         end = false;
-        gameStatus = GameStatus.BREAK;
+        game = new HoldemGame();
     }
 
     public boolean isEnded() {
@@ -40,12 +38,10 @@ public class CommandPrompt {
                 break;
             case "start":
             case "run":
-                game.setStatus(GameStatus.ROUNDONE);
-                game.run();
-                break;
             case "restart":
                 System.out.println();
-                game = new HoldemGame(numbersOfPlayers);
+                game.setStartsAt(game.getGameCount() % numbersOfPlayers);
+                game.newGame();
                 game.setStatus(GameStatus.ROUNDONE);
                 game.run();
                 break;
@@ -53,50 +49,89 @@ public class CommandPrompt {
                 end = true;
                 break;
             case "help":
-                System.out.println("start, restart, end");
+                System.out.println("start\nend\nhelp\nset [numbers of player]\ncredit [player index starts at 1] [amounts of credit]\n" +
+                        "addcredit [player index starts at 1] [amount of credit]\nprint (display card set at borad)\nviewplayer [player index starts at 1]\n" +
+                        "display (view all players)\nshuffle\nnewcard\nsetname [player index starts at 1] [name]\nsmallblindbet [amount of blind bet]\n" +
+                        "startsat [player index]\n");
                 break;
             case "set":
-                if (rawComm[1].matches("\\d{1,2}")) {
-                    if (Integer.parseInt(rawComm[1]) > 17){
-                        System.out.println("set player unsuccessful, number too large.");
-                        break;
-                    }
+                try {
                     numbersOfPlayers = Integer.parseInt(rawComm[1]);
+                    game.setPlayers(numbersOfPlayers);
                     System.out.println("Successfully set to " + numbersOfPlayers + " players.");
-                    game = new HoldemGame(numbersOfPlayers);
-                } else {
-                    System.out.println("set player unsuccessful, try again.");
+                } catch (Exception e) {
+                    System.out.println("set number of players unsuccessful, try again.");
                 }
                 break;
             case "credit":
             case "cash":
-                if (rawComm[1].matches("\\d{1,2}")) {
-                    int pIndex = Integer.parseInt(rawComm[1]);
-                    if (pIndex < numbersOfPlayers && pIndex > 0){
-                        System.out.println("set player credit unsuccessful, player not exist.");
-                        break;
-                    } else {
-                        if (rawComm[2].matches("\\d{1,5}")){
-                            game.players.get(pIndex - 1).setTotalCredit(Integer.parseInt(rawComm[2]));
-                            System.out.println("Successfully set player " + pIndex + " credit to " + Integer.parseInt(rawComm[2]) + ".");
-                        }
+                try {
+                    if (game.setPlayersCredit(Integer.parseInt(rawComm[1]), Integer.parseInt(rawComm[2]))) {
+                        System.out.println("Successfully set credit");
+                        System.out.println(game.viewPlayer(Integer.parseInt(rawComm[1])));
                     }
-
-                } else {
-                    System.out.println("set player unsuccessful, try again.");
+                }catch (Exception e){
+                    System.out.println("set player\'s credit unsuccessful, try again.");
+                }
+                break;
+            case "addcrdit":
+            case "addcash":
+            case "addc":
+                try {
+                    if (game.addPlayersCredit(Integer.parseInt(rawComm[1]), Integer.parseInt(rawComm[2]))) {
+                        System.out.println("Successfully add credit to player");
+                        System.out.println(game.viewPlayer(Integer.parseInt(rawComm[1])));
+                    }
+                }catch (Exception e){
+                    System.out.println("add player\'s credit unsuccessful, try again.");
                 }
                 break;
             case "print":
+                game.viewCardSet();
+                break;
+            case "viewplayer":
+            case "viewp":
+                try {
+                    System.out.println(game.viewPlayer(Integer.parseInt(rawComm[1])));
+                } catch (Exception e) {
+                    System.out.println("view player unsuccessful, please try again.");
+                }
+                break;
             case "display":
             case "dis":
-            case "view":
-                game.viewCardSet();
+                System.out.println(game.displayGameTable(GameStatus.BREAK));
                 break;
             case "shuffle":
                 game.shuffle();
+                System.out.println("Successfully shuffled.");
                 break;
             case "newcard":
                 game.newCard();
+                break;
+            case "setname":
+            case "setn":
+                try{
+                    game.setName(Integer.parseInt(rawComm[1]), rawComm[2]);
+                    System.out.print("Set name successful! player " + rawComm[1] + " new name: " + game.getName(Integer.parseInt(rawComm[1])) + "\n");
+                }catch (Exception e) {
+                    System.out.println("Set name fail, please try again.");
+                }
+                break;
+            case "smallblindbet":
+            case "sbb":
+                try {
+                    game.setsBlindBets(Integer.parseInt(rawComm[1]));
+                } catch (Exception e) {
+                    System.out.println("Set blind bet fail, please try again.");
+                }
+                break;
+            case "startsat":
+            case "sa":
+                try {
+                    game.setStartsAt(Integer.parseInt(rawComm[1]));
+                } catch (Exception e) {
+                    System.out.println("Set starts at fail, please try again.");
+                }
                 break;
             default:
                 System.out.println("Unknown Command, type \"help\" for more.");

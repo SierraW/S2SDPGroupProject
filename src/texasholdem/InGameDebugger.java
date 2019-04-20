@@ -38,9 +38,9 @@ public class InGameDebugger {
                     int pIndex = Integer.parseInt(rawC[1]);
                     if (!(pIndex > game.players.size() - 1)) {
                         if (rawC[2].equals("cards")) {
-                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDONE);
-                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTWO);
-                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTHREE);
+                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDONE));
+                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTWO));
+                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTHREE));
 
                         } else {
                             System.out.println("Bad Command, InGameDebugger switchCommand player num ???");
@@ -111,7 +111,7 @@ public class InGameDebugger {
                 break;
             case "print":
             case "pt":
-                game.displayGameTable(GameStatus.CHECK);
+                System.out.println(game.displayGameTable(GameStatus.DEBUG));
                 break;
             case "desk":
                 try {
@@ -130,8 +130,8 @@ public class InGameDebugger {
                 break;
             case "check":
                 try {
-                    CardCheck cardCheck = new CardCheck();
-                    cardCheck.check(combineCards(Integer.parseInt(rawC[1])));
+                    CardCheck cardCheck1 = new CardCheck();
+                    printCards(cardCheck1.check(combineCards(Integer.parseInt(rawC[1]))).CARDS);
                 } catch (Exception e) {
                     System.out.println("Unknown Command");
                 }
@@ -166,6 +166,10 @@ public class InGameDebugger {
                 } catch (Exception e) {
                     System.out.println("Unknown Command");
                 }
+                break;
+            case "checkall":
+            case "chall":
+                System.out.println(game.gameEnd());
                 break;
             default:
                 System.out.println("Unknown Command.");
