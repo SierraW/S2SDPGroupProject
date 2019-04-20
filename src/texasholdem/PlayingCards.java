@@ -9,7 +9,7 @@ public class PlayingCards {
     private boolean empty;
 
     public PlayingCards() {
-        cards = new ArrayList<>(52);
+        cards = new ArrayList<>();
         generateCardSet();
         empty = false;
     }
@@ -25,6 +25,11 @@ public class PlayingCards {
             }
         }
     }
+
+    public boolean isFullSet() {
+        return cards.size() == 52;
+    }
+
 
     public void viewCardSet() {
         for (int i=0; i< cards.size(); i++) {

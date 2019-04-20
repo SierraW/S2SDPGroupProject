@@ -113,6 +113,9 @@ public class CardCheck {
         highestCountsArr.add(1);    //make sure array list has more than one elements
         sortByRank(cards);
         int kindCount = 1;
+        ArrayList<Card> kindCard1 = new ArrayList<>();
+        ArrayList<Card> kindCard2 = new ArrayList<>();
+        ArrayList<Card> kindCard3 = new ArrayList<>();
         Card heap;
 
         for (int i = 1; i < cards.size(); i++) {
@@ -136,19 +139,47 @@ public class CardCheck {
             } else {
                 if (kindCount >= 2 && i < cards.size() - 1) {
                     highestCountsArr.add(kindCount);
+                    if (kindCard1.size() == 0) {
+                        kindCard1 = new ArrayList<>(kindCards);
+
+                        kindCards = new ArrayList<>();
+                    } else if (kindCard2.size() == 0) {
+                        kindCard2 = new ArrayList<>(kindCards);
+                        kindCards = new ArrayList<>();
+                    } else {
+                        kindCard3 = new ArrayList<>(kindCards);
+                        kindCards = new ArrayList<>();
+                    }
                     kindCount = 1;
                 }
 
             }
         }
 
-        if (kindCount >= 2) {
-            highestCountsArr.add(kindCount);
+        if (kindCard1.size() == 0) {
+            kindCard1 = new ArrayList<>(kindCards);
+
+            kindCards = new ArrayList<>();
+        } else if (kindCard2.size() == 0) {
+            kindCard2 = new ArrayList<>(kindCards);
+            kindCards = new ArrayList<>();
+        } else {
+            kindCard3 = new ArrayList<>(kindCards);
+            kindCards = new ArrayList<>();
         }
 
-        Collections.sort(highestCountsArr, Collections.reverseOrder());
+        highestCountsArr.sort(Collections.reverseOrder());
 
         Integer[] integers = highestCountsArr.toArray(new Integer[highestCountsArr.size()]);
+
+        if (highestCountsArr.get(0) == 4) {
+            return new ReturnTwo<>(kindCard1, integers);
+        } else if (highestCountsArr.get(0) == 2 && highestCountsArr.get(1) == 2) {
+            kindCard1.addAll(kindCard2);
+            return new ReturnTwo<>( kindCard1 , integers);
+        }
+
+
         return new ReturnTwo<>(kindCards, integers);
     }
 

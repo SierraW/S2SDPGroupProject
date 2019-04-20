@@ -18,7 +18,7 @@ public class GameVisualizer {
         System.out.println("\n Total Pool: " + deskPlayer.getCredit());
     }
 
-    void playersVisualizer(ArrayList<Player> players, GameStatus round, Player currentPlayer) {
+    void playersVisualizer(ArrayList<Player> players, GameStatus round, Player currentPlayer, int placedBet) {
         switch (round) {
             case BREAK:
                 for (Player player : players) {
@@ -33,9 +33,27 @@ public class GameVisualizer {
             case ROUNDONE:
             case ROUNDTWO:
             case ROUNDTHREE:
-                for (Player player : players) {
-                    System.out.print(player.getName() + " (Player " + player.getINDEX() + ") :" + player.getCards() + "  Total credit: " + player.getCredit() + " Current Round Bet: " + player.getRoundCredit(round) + " Total Game Bet: " + player.getRoundCredit(GameStatus.CHECK) + " ");
-                    if (currentPlayer.getINDEX() == player.getINDEX()) {
+                int previousPlayerIndex;
+                System.out.println(round.name());
+                for (int i = 0; i < players.size(); i++) {
+                    System.out.print(players.get(i).getName() + " (Player " + players.get(i).getINDEX() + ") :" + players.get(i).getCards() + "  Total credit: " + players.get(i).getCredit() + " Current Round Bet: " + players.get(i).getRoundCredit(round) + " Total Game Bet: " + players.get(i).getRoundCredit(GameStatus.CHECK) + " ");
+                    if (currentPlayer.getINDEX() == players.get(0).getINDEX()) {
+                        previousPlayerIndex = players.size() - 1;
+                    } else {
+                        previousPlayerIndex = currentPlayer.getINDEX() - 2;
+                    }
+
+                    if (i == previousPlayerIndex) {
+                        if (placedBet > 0) {
+                            System.out.print("       >>>>>> Placed " + placedBet + " <<<<<<");
+                        } else if (placedBet == 0) {
+                            System.out.print("       >>>>> check <<<<<");
+                        } else if (placedBet == -1){
+                            System.out.print("       >>>> out <<<<<");
+                        }
+                    }
+
+                    if (currentPlayer.getINDEX() == players.get(i).getINDEX()) {
                         System.out.print("       >>>>>>>Your Turn<<<<<<<");
                     }
                     System.out.println();

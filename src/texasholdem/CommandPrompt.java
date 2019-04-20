@@ -47,12 +47,12 @@ public class CommandPrompt {
                 try {
                     System.out.println();
                     game.newGame();
-                    game.setStartsAt(game.getGameCount() % numbersOfPlayers + 1);
+                    game.setStartsAt(game.getGameCount() % numbersOfPlayers);
                     game.run();
                     System.out.println("Game Start!");
                     System.out.println(gv.startRoundMessage(GameStatus.ROUNDONE));;
-                    gameStatus = GameStatus.ROUNDONE;
                     viewGameTable();
+                    gameStatus = GameStatus.ROUNDONE;
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
@@ -85,6 +85,9 @@ public class CommandPrompt {
                             if (game.getStatus() != gameStatus) {
                                 gameStatus = game.getStatus();
                                 System.out.println(gv.startRoundMessage(gameStatus));
+                                if (gameStatus == GameStatus.CHECK) {
+                                    condition = false;
+                                }
                             }
                             viewGameTable();
                         } else {
@@ -211,7 +214,7 @@ public class CommandPrompt {
 
     public void viewGameTable() {
         gv.deskVisualizer(game.getDeskPlayer());
-        gv.playersVisualizer(game.getPlayers(), game.getStatus(), game.getCurrentPlayer());
+        gv.playersVisualizer(game.getPlayers(), gameStatus, game.getCurrentPlayer(), game.getPlacedCredit());
     }
 
     public void playRound(Player player, int highest, GameStatus round) throws Exception {
@@ -223,6 +226,7 @@ public class CommandPrompt {
         while (!(game.placeBet(inputHandleSystem.getInt("how many bets you want to add? (at least " + (game.getRoundHighest() - player.getRoundCredit(round)) + "): \n", Domain.hasMinimum, 0)))) {
             if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y', 'n') == 'y') {
                 player.setActive(false);
+                break;
             }
         }
         System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");

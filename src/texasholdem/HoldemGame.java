@@ -17,8 +17,10 @@ public class HoldemGame {
     private int roundHighest;
     private ArrayList<Player> winners;
     private int startsAt;
+    private int placedCredit;
 
     HoldemGame() {
+        playingCards = new PlayingCards();
         numbersOfPlayers = 4;
         setPlayers(numbersOfPlayers);
         newGame();
@@ -36,7 +38,9 @@ public class HoldemGame {
 
     public void newGame() throws IllegalStateException {
         Player.indexFactory = 0;
-        playingCards = new PlayingCards();
+        if (!playingCards.isFullSet()) {
+            playingCards = new PlayingCards();
+        }
         deskCards = new Player();
         deskCards.setTotalCredit(0);
         deskCards.resetRoundCredit();
@@ -55,6 +59,7 @@ public class HoldemGame {
             }
         }
         currentPlayer = players.get(startsAt);
+        placedCredit = -2;
         reset();
     }
 
@@ -164,9 +169,10 @@ public class HoldemGame {
         for (Player player : players) {
             if (player.getCredit() < sBlindBets) {
                 players.remove(player);
+                fixPlayersIndex();
             }
         }
-        fixPlayersIndex();
+
     }
 
     private void fixPlayersIndex() {
@@ -264,7 +270,7 @@ public class HoldemGame {
             }
         }
 
-        if (count++ < activePlayersCount - 1 || currentPlayer.getRoundCredit(status) != roundHighest) {
+        if (count++ < activePlayersCount - 1 || getNextPlayer().getRoundCredit(status) != roundHighest) {
             if (!currentPlayer.isActive()) { //todo remove fail safe
                 currentPlayer = getNextPlayer();
             }
@@ -289,6 +295,8 @@ public class HoldemGame {
             return true;
         }
 
+        currentPlayer = getNextPlayer();
+
         if (currentPlayer.isActive()) {
             switch (status) {
                 case ROUNDONE:
@@ -312,7 +320,16 @@ public class HoldemGame {
     }
 
     public boolean placeBet(int bets) {
-        return currentPlayer.placeCredit(roundHighest, bets, status);
+        if (currentPlayer.placeCredit(roundHighest, bets, status)) {
+            placedCredit = bets;
+            return true;
+        }
+        placedCredit  = -1;
+        return false;
+    }
+
+    public int getPlacedCredit() {
+        return placedCredit;
     }
 
     private void setPoolCredit() { //todo can be better
@@ -397,15 +414,15 @@ public class HoldemGame {
 
             outStr += ("Player " + player.getINDEX() + " score: " + player.getCardPoint() + "\n");
             for (Card card : player.getCards()) {
-                outStr += (card.toString() + " ");
+                outStr += (card.printCard(true) + " ");
             }
             outStr += "+ ";
             for (Card card : deskCards.getCards()) {
-                outStr += (card.toString() + " ");
+                outStr += (card.printCard(true) + " ");
             }
             outStr += "\nbest sets: " + result.VALUE.name() + " best five cards:\n";
             for (Card card : result.CARDS) {
-                outStr += (card.toString() + " ");
+                outStr += (card.printCard(true) + " ");
             }
             outStr += "\n\n";
         }
@@ -423,7 +440,7 @@ public class HoldemGame {
 
         if (winners.size() == 1) {
             outStr += (winners.get(0).getName() + " (Player " + winners.get(0).getINDEX() + ") won\n");
-            remainingPlayers.get(0).setCredit(deskCards.getCredit());
+            winners.get(0).setCredit(deskCards.getRoundCredit(GameStatus.CHECK));
             deskCards.setTotalCredit(0);
         } else {
             outStr += ("Multiple winner!\n");
