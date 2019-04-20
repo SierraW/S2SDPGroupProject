@@ -1,7 +1,7 @@
 package texasholdem;
 
 public enum Suit {
-    DIAMOND, CLUB, HEART, SPADE;
+    SPADE, HEART, CLUB, DIAMOND;
 
     @Override
     public String toString() {
@@ -17,25 +17,6 @@ public enum Suit {
 
             case DIAMOND:
                 return "♦️";
-
-            default:
-                return "error";
-        }
-    }
-
-    public String toASCII() {
-        switch (this) {
-            case SPADE:
-                return "Spade";
-
-            case HEART:
-                return "Heart";
-
-            case CLUB:
-                return "Club";
-
-            case DIAMOND:
-                return "Diamond";
 
             default:
                 return "error";

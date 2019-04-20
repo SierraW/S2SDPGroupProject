@@ -1,5 +1,5 @@
 package texasholdem;
 
 public enum GameStatus {
-    BREAK, ROUNDONE, ROUNDTWO, ROUNDTHREE, CHECK, DEBUG;
+    BREAK, ROUNDONE, ROUNDTWO, ROUNDTHREE, CHECK
 }

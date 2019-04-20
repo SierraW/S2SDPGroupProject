@@ -1,7 +1,7 @@
 package texasholdem;
 
 public enum Value {
-    TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE;
+    ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING;
 
     @Override
     public String toString() {
@@ -17,7 +17,7 @@ public enum Value {
             case EIGHT:
             case NINE:
             case TEN:
-                return String.valueOf(this.ordinal() + 2);
+                return String.valueOf(this.ordinal());
             case JACK:
                 return "J";
             case QUEEN:
@@ -26,39 +26,6 @@ public enum Value {
                 return "K";
             default:
                 return "error";
-        }
-    }
-
-    public String toHex() {
-        switch (this) {
-            case ACE:
-                return "D";
-            case TWO:
-                return "1";
-            case THREE:
-                return "2";
-            case FOUR:
-                return "3";
-            case FIVE:
-                return "4";
-            case SIX:
-                return "5";
-            case SEVEN:
-                return "6";
-            case EIGHT:
-                return "7";
-            case NINE:
-                return "8";
-            case TEN:
-                return "9";
-            case JACK:
-                return "A";
-            case QUEEN:
-                return "B";
-            case KING:
-                return "C";
-            default:
-                return "0";
         }
     }
 }

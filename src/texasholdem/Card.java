@@ -1,28 +1,19 @@
 package texasholdem;
 
-import com.sun.istack.internal.NotNull;
-
-import java.util.Comparator;
-
-public class Card implements Comparable<Card>{
+public class Card {
     private final Suit SUIT;
     private final Value VALUE;
     private final int INDEX;
     private boolean faceUp;
 
-    @Override
-    public int compareTo(Card card) {
-        return Comparators.INDEX.compare(this, card);
+    public Card(int vIndex, int sIndex) {
+        this(sIndex*100 + vIndex);
     }
 
-    public Card(@NotNull int vIndex, int sIndex) {
-        this(sIndex + vIndex * 10);
-    }
-
-    public Card(@NotNull int index){
+    public Card(int index){
         this.INDEX = index;
-        SUIT = Suit.values()[index%10];
-        VALUE = Value.values()[(index - (index % 10))/10];
+        SUIT = Suit.values()[(index - (index % 100))/100];
+        VALUE = Value.values()[index % 100];
         faceUp = false;
     }
 
@@ -34,10 +25,6 @@ public class Card implements Comparable<Card>{
         return VALUE;
     }
 
-    public int getINDEX() {
-        return INDEX;
-    }
-
     public boolean isFaceUp() {
         return faceUp;
     }
@@ -46,50 +33,11 @@ public class Card implements Comparable<Card>{
         this.faceUp = faceUp;
     }
 
-    public String printCard(boolean isForceViewCard) {
-        if (isForceViewCard) {
-            return this.SUIT.toString()+this.VALUE.toString();
-        }
+    @Override
+    public String toString() {
         if (!isFaceUp()) {
-            return "🎴";
+            return "🎴 ";
         }
         return this.SUIT.toString()+this.VALUE.toString();
     }
-
-    public String printCardText(boolean isForceViewCard) {
-        if (isForceViewCard) {
-            return this.SUIT.toASCII()+this.VALUE.toString();
-        }
-        if (!isFaceUp()) {
-            return "Card";
-        }
-        return this.SUIT.toASCII()+this.VALUE.toString();
-    }
-
-    @Override
-    public String toString() {
-        return printCard(false);
-    }
-
-    public static class Comparators {
-        public static Comparator<Card> INDEX = new Comparator<Card>() {
-            @Override
-            public int compare(Card o1, Card o2) {
-                return o2.INDEX - o1.INDEX ;
-            }
-        };
-        public static Comparator<Card> SUIT = new Comparator<Card>() {
-            @Override
-            public int compare(Card o1, Card o2) {
-                return  o2.SUIT.ordinal() - o1.SUIT.ordinal();
-            }
-        };
-        public static Comparator<Card> VALUE = new Comparator<Card>() {
-            @Override
-            public int compare(Card o1, Card o2) {
-                return o2.VALUE.ordinal() - o1.VALUE.ordinal() ;
-            }
-        };
-    }
 }
-

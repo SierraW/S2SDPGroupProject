@@ -9,37 +9,28 @@ public class PlayingCards {
     private boolean empty;
 
     public PlayingCards() {
-        cards = new ArrayList<>();
+        cards = new ArrayList<>(52);
         generateCardSet();
         empty = false;
     }
 
     public void generateCardSet() {
         int count = 0;
-        for (int k = 3; k >= 0; k--) {
-            cards.add(new Card(12,k));
-        }
-        for (int i = 0; i < 12; i++) {
-            for (int j = 3; j >= 0; j--) {
+        for (int i = 0; i < 13; i++) {
+            for (int j = 0; j < 4; j++) {
                 cards.add(new Card(i,j));
             }
         }
     }
 
-    public boolean isEnoughSet(int numbersOfPlayers) {
-        return cards.size() >= numbersOfPlayers * 2 + 5;
-    }
-
-
-    public void viewCardSet() { // todo remove debug
+    public void viewCardSet() {
         for (int i=0; i< cards.size(); i++) {
             if (i % 10 != 9) {
-                System.out.print(cards.get(i).getSuit().toString() + cards.get(i).getValue().toString() + " ");
+                System.out.print(cards.get(i) + " ");
             } else {
-                System.out.println(cards.get(i).getSuit().toString() + cards.get(i).getValue().toString());
+                System.out.println(cards.get(i));
             }
         }
-        System.out.println();
     }
 
     public void shuffleCards() {

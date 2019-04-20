@@ -3,9 +3,9 @@ package texasholdem;
 public class Credit {
     int total;
     int round;
-    private int roundOne;
-    private int roundTwo;
-    private int roundThree;
+    int roundOne;
+    int roundTwo;
+    int roundThree;
 
     Credit() {
         total = 0;
@@ -13,14 +13,6 @@ public class Credit {
         roundOne = 0;
         roundTwo = 0;
         roundThree = 0;
-    }
-
-    Credit(int roundOne, int roundTwo, int roundThree) {
-        this.roundOne = roundOne;
-        this.roundTwo = roundTwo;
-        this.roundThree = roundThree;
-        this.round = roundOne+ roundTwo + roundThree;
-        this.total = this.round;
     }
 
     int difference(int highestBet, GameStatus round) throws IllegalArgumentException {
@@ -37,16 +29,16 @@ public class Credit {
     }
 
     boolean place(int highestBet, int amount, GameStatus round) {
-        if (round != GameStatus.ROUNDONE && round != GameStatus.ROUNDTWO && round != GameStatus.ROUNDTHREE) {
-            return false;
-        }
-
         if (amount == 0) {
             if (difference(highestBet, round) == 0) {
                 return true;
             }
 
-            return (total == 0);
+            if (total == 0) {
+                return true;
+            }
+
+            return false;
         }
         if (amount >= difference(highestBet, round)) {
             if (total - amount < 0) {
@@ -69,14 +61,7 @@ public class Credit {
         return false;
     }
 
-    void resetRoundCredit() {
-        round = 0;
-        roundOne = 0;
-        roundTwo = 0;
-        roundThree = 0;
-    }
-
-    int creditAt(GameStatus round) {
+    int creditAt(GameStatus round) throws IllegalArgumentException{
         switch (round) {
             case ROUNDONE:
                 return roundOne;
@@ -84,12 +69,14 @@ public class Credit {
                 return roundTwo;
             case ROUNDTHREE:
                 return roundThree;
-            default:
+            case CHECK:
                 return this.round;
+            default:
+                throw new IllegalArgumentException("InvalidCall");
         }
     }
 
-    void setCreditAt(int credit, GameStatus round) {
+    private void setCreditAt(int credit, GameStatus round) {
         switch (round) {
             case ROUNDONE:
                 roundOne += credit;
