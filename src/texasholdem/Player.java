@@ -12,7 +12,7 @@ public class Player {
 
     public Player() {
         INDEX = indexGenerator();
-        cards = new ArrayList<>(5);
+        cards = new ArrayList<>();
         credit = new Credit();
         credit.total = 100;
         roundPlacedCredit = 0;
@@ -47,7 +47,7 @@ public class Player {
         System.out.println();
     }
 
-    private void viewCard() {
+    void viewCard() {
         for (Card card: cards){
             card.setFaceUp(true);
         }
@@ -55,6 +55,14 @@ public class Player {
         for (Card card: cards){
             card.setFaceUp(false);
         }
+    }
+
+    public ArrayList<Card> getCards() {
+        return new ArrayList<>(cards);
+    }
+
+    public ArrayList<Card> debugGetCards() { // todo remove debug mothd
+        return cards;
     }
 
     public int getINDEX() {
@@ -93,6 +101,10 @@ public class Player {
 
     public void changeCardFaceAt(int index) {
         cards.get(index).setFaceUp(!cards.get(index).isFaceUp());
+    }
+
+    public void sort() {
+        cards.sort(Card.Comparators.INDEX);
     }
 
     static int indexFactory = 0;

@@ -40,11 +40,13 @@ public class CommandPrompt {
                 break;
             case "start":
             case "run":
+                game.setStatus(GameStatus.ROUNDONE);
                 game.run();
                 break;
             case "restart":
                 System.out.println();
                 game = new HoldemGame(numbersOfPlayers);
+                game.setStatus(GameStatus.ROUNDONE);
                 game.run();
                 break;
             case "end":
@@ -83,6 +85,18 @@ public class CommandPrompt {
                 } else {
                     System.out.println("set player unsuccessful, try again.");
                 }
+                break;
+            case "print":
+            case "display":
+            case "dis":
+            case "view":
+                game.viewCardSet();
+                break;
+            case "shuffle":
+                game.shuffle();
+                break;
+            case "newcard":
+                game.newCard();
                 break;
             default:
                 System.out.println("Unknown Command, type \"help\" for more.");

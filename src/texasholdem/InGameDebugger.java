@@ -4,17 +4,29 @@ import java.util.ArrayList;
 
 public class InGameDebugger {
     InputHandleSystem inputHandleSystem = new InputHandleSystem();
-    ArrayList<Player> players;
+    private HoldemGame game;
+    private boolean enable;
 
-    InGameDebugger(ArrayList<Player> players) {
-        this.players = players;
+    InGameDebugger(HoldemGame game) {
+        this.game = game;
+        enable = false;
     }
 
-//    public String getInput(String message) throws Exception {
-//        switch (inputHandleSystem.getLine(message)) {
-//
-//        }
-//    }
+    public String getInput(String message) throws Exception {
+        String command = inputHandleSystem.getLine(message).toLowerCase();
+        String[] rawComm = command.split(" ");
+        switch (rawComm[0]) {
+            case "comm":
+                enable = true;
+                while (enable) {
+                    switchCommand(inputHandleSystem.getLine("comm:\\"));
+                }
+                break;
+            default:
+
+        }
+        return command;
+    }
 
 
     private void switchCommand(String comm) {
@@ -22,22 +34,156 @@ public class InGameDebugger {
 
         switch (rawC[0]) {
             case "player":
-                if (rawC[1].matches("[12][0-9]")) {
+                if (rawC[1].matches("\\d{1,2}")) {
                     int pIndex = Integer.parseInt(rawC[1]);
-                    if (!(pIndex > players.size() - 1)) {
+                    if (!(pIndex > game.players.size() - 1)) {
                         if (rawC[2].equals("cards")) {
-                                players.get(pIndex).viewPlayer(GameStatus.ROUNDONE);
-                                players.get(pIndex).viewPlayer(GameStatus.ROUNDTWO);
-                                players.get(pIndex).viewPlayer(GameStatus.ROUNDTHREE);
+                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDONE);
+                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTWO);
+                            game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTHREE);
 
                         } else {
                             System.out.println("Bad Command, InGameDebugger switchCommand player num ???");
                         }
                     }
                 }
-            case "restart":
+            case "display":
+            case "dis":
+                game.viewCardSet();
+                break;
+            case "view":
+                if (rawC[1].matches("\\d{1,2}")) {
+                    int pIndex = Integer.parseInt(rawC[1]);
+                    if (!(pIndex > game.players.size() - 1)) {
+                        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
+                        newCards.addAll(game.players.get(pIndex).getCards());
+                        CardCheck cardCheck = new CardCheck();
+                        cardCheck.checkRanking(newCards);
+                    }
+                } else {
+                    System.out.println("Unknown Command.");
+                }
+                break;
+            case "sort":
+                if (rawC[1].matches("\\d{1,2}")) {
+                    int pIndex = Integer.parseInt(rawC[1]);
+                    if (!(pIndex > game.players.size() - 1)) {
+                        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
+                        newCards.addAll(game.players.get(pIndex).getCards());
+                        CardCheck cardCheck = new CardCheck();
+                        cardCheck.sortByIndex(newCards);
+                        for (Card card : newCards) {
+                            System.out.print(card.getSuit().toString() + card.getValue().toString() + "\t");
+                        }
+                    }
+                } else {
+                    System.out.println("Unknown Command.");
+                }
+                System.out.println();
+                break;
+            case "sortr":
+                try {
+                    CardCheck cardCheck = new CardCheck();
+                    printCards(cardCheck.sortByRank(combineCards(Integer.parseInt(rawC[1]))));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                System.out.println();
+                break;
+            case "sorts":
+                try {
+                    CardCheck cardCheck = new CardCheck();
+                    printCards(cardCheck.sortBySuit(combineCards(Integer.parseInt(rawC[1]))));
+                    System.out.println();
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "exit":
+                enable = false;
+                break;
+            case "set":
+                try {
+                    game.players.get(Integer.parseInt(rawC[1])).debugGetCards().set(Integer.parseInt(rawC[2]), new Card(Integer.parseInt(rawC[3])));
+                } catch (Exception e){
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "print":
+            case "pt":
+                game.displayGameTable(GameStatus.CHECK);
+                break;
+            case "desk":
+                try {
+                    game.deskCards.debugGetCards().set(Integer.parseInt(rawC[1]), new Card(Integer.parseInt(rawC[2])));
+                } catch (Exception e){
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "isst":
+                try {
+                    CardCheck cardCheck = new CardCheck();
+                    printCards(cardCheck.getStraight(combineCards(Integer.parseInt(rawC[1]))));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "check":
+                try {
+                    CardCheck cardCheck = new CardCheck();
+                    cardCheck.check(combineCards(Integer.parseInt(rawC[1])));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "isfl":
+                try {
+                    CardCheck cardCheck = new CardCheck();
+                    printCards(cardCheck.getFlush(combineCards(Integer.parseInt(rawC[1]))));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "ispr":
+            case "ispa":
+                try {
+                    CardCheck cardCheck = new CardCheck();
 
+                    printCards(cardCheck.debugGetKind(combineCards(Integer.parseInt(rawC[1]))));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            case "end":
+                enable = false;
+                game.setStatus(GameStatus.BREAK);
+                break;
+            case "combine":
+            case "comb":
+            case "com":
+                try {
+                    printCards(combineCards(Integer.parseInt(rawC[1])));
+                } catch (Exception e) {
+                    System.out.println("Unknown Command");
+                }
+                break;
+            default:
+                System.out.println("Unknown Command.");
 
         }
+    }
+    
+    private ArrayList<Card> combineCards(int playerIndex) {
+        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
+        newCards.addAll(game.players.get(playerIndex).getCards());
+        return newCards;
+    }
+
+    private void printCards(ArrayList<Card> cards) {
+        System.out.println("elements: " + cards.size());
+        for (Card card : cards) {
+            System.out.print(card.getSuit().toString() + card.getValue().toString() + " ");
+        }
+        System.out.println();
     }
 }

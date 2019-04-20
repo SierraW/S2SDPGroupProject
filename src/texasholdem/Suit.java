@@ -1,7 +1,7 @@
 package texasholdem;
 
 public enum Suit {
-    SPADE, HEART, CLUB, DIAMOND;
+    DIAMOND, CLUB, HEART, SPADE;
 
     @Override
     public String toString() {

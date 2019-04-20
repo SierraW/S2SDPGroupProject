@@ -16,8 +16,11 @@ public class PlayingCards {
 
     public void generateCardSet() {
         int count = 0;
-        for (int i = 0; i < 13; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int k = 3; k >= 0; k--) {
+            cards.add(new Card(12,k));
+        }
+        for (int i = 0; i < 12; i++) {
+            for (int j = 3; j >= 0; j--) {
                 cards.add(new Card(i,j));
             }
         }
@@ -26,11 +29,12 @@ public class PlayingCards {
     public void viewCardSet() {
         for (int i=0; i< cards.size(); i++) {
             if (i % 10 != 9) {
-                System.out.print(cards.get(i) + " ");
+                System.out.print(cards.get(i).getSuit().toString() + cards.get(i).getValue().toString() + " ");
             } else {
-                System.out.println(cards.get(i));
+                System.out.println(cards.get(i).getSuit().toString() + cards.get(i).getValue().toString());
             }
         }
+        System.out.println();
     }
 
     public void shuffleCards() {

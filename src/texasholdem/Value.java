@@ -1,7 +1,7 @@
 package texasholdem;
 
 public enum Value {
-    ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING;
+    TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE;
 
     @Override
     public String toString() {
@@ -17,7 +17,7 @@ public enum Value {
             case EIGHT:
             case NINE:
             case TEN:
-                return String.valueOf(this.ordinal());
+                return String.valueOf(this.ordinal() + 2);
             case JACK:
                 return "J";
             case QUEEN:
