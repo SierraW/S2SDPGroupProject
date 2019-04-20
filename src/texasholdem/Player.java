@@ -30,7 +30,7 @@ public class Player {
                 System.out.print("\t\t");
             }
         }
-        System.out.println("Total bet: "+ credit.round + "\tCurrent round: " + credit.creditAt(round));
+        System.out.println("Total bet: "+ credit.round + "\tCurrent round: " + credit.creditAt(round) + "\tPlayer total credit: " + credit.total);
     }
 
     public void viewPlayerCard() {

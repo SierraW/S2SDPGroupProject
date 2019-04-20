@@ -5,12 +5,15 @@ import java.util.ArrayList;
 public class HoldemGame {
 
     private PlayingCards playingCards;
-    private ArrayList<Player> players;
+    ArrayList<Player> players;
     private Player deskCards;
     private GameStatus status;
     private int pool;
     private int sBlindBets;
+    private InGameDebugger debugger;
     private InputHandleSystem inputHandleSystem = new InputHandleSystem();
+    private Player currentPlayer;
+    private int count;
 
     HoldemGame(int numOfPlayers) {
         playingCards = new PlayingCards();
@@ -24,6 +27,14 @@ public class HoldemGame {
         for (int i = 0; i< numOfPlayers; i++) {
             players.add(new Player());
         }
+
+        currentPlayer = players.get(0);
+        reset();
+        debugger = new InGameDebugger(players);
+    }
+
+    private void reset() {
+        count = 0;
     }
 
     public void run() throws Exception{
@@ -95,9 +106,8 @@ public class HoldemGame {
     }
 
     private void playerLoops(GameStatus round, int roundHighest) throws Exception{
-        int i = 1;
-        int count = 0;
-        while (players.get(i-1).getRoundCredit(round) != roundHighest && players.get(i-1).isActive()) {
+        reset();
+        while (currentPlayer.getRoundCredit(round) != roundHighest && currentPlayer.isActive()) {
             //big blind bets
             if (count++==1) {
                 if (roundHighest < sBlindBets * 2) {
@@ -105,27 +115,27 @@ public class HoldemGame {
                 }
             }
             //check active
-            if (!players.get(i-1).isActive()) {
+            if (!currentPlayer.isActive()) {
                 for (Player player : players) {
                     if (player.isActive()) {
-                        i = counter(i, players.size());
-                        continue;
+                        currentPlayer = getNextPlayer();
+                        break;
                     }
                 }
                 status = GameStatus.BREAK;
             }
             //start
-            inputHandleSystem.getLine("Pass to player " + i +"\n enter to continue.\n\n\n");
+            inputHandleSystem.getLine("Pass to player " + currentPlayer.getINDEX() +"\n enter to continue.\n\n\n");
             displayGameTable(round);
-            players.get(i-1).playRound(roundHighest, pool, round);
-            if (!players.get(i-1).isActive()){
-                i = counter(i, players.size());
+            currentPlayer.playRound(roundHighest, pool, round);
+            if (!currentPlayer.isActive()){
+                currentPlayer = getNextPlayer();
                 System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
                 continue;
             }
-            roundHighest = players.get(i-1).getRoundCredit(round);
+            roundHighest = currentPlayer.getRoundCredit(round);
 
-            i = counter(i, players.size());
+            currentPlayer = getNextPlayer();
             System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         }
     }
@@ -174,6 +184,16 @@ public class HoldemGame {
             return 1;
         } else {
             return ++count;
+        }
+    }
+
+    private Player getNextPlayer() {
+        if (currentPlayer.getINDEX() + 1 > players.size()) {
+            // index 0
+            return players.get(0);
+        } else {
+            // index ++
+            return players.get(currentPlayer.getINDEX());
         }
     }
 }

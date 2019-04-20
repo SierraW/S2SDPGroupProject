@@ -66,6 +66,24 @@ public class CommandPrompt {
                     System.out.println("set player unsuccessful, try again.");
                 }
                 break;
+            case "credit":
+            case "cash":
+                if (rawComm[1].matches("\\d{1,2}")) {
+                    int pIndex = Integer.parseInt(rawComm[1]);
+                    if (pIndex < numbersOfPlayers && pIndex > 0){
+                        System.out.println("set player credit unsuccessful, player not exist.");
+                        break;
+                    } else {
+                        if (rawComm[2].matches("\\d{1,5}")){
+                            game.players.get(pIndex - 1).setTotalCredit(Integer.parseInt(rawComm[2]));
+                            System.out.println("Successfully set player " + pIndex + " credit to " + Integer.parseInt(rawComm[2]) + ".");
+                        }
+                    }
+
+                } else {
+                    System.out.println("set player unsuccessful, try again.");
+                }
+                break;
             default:
                 System.out.println("Unknown Command, type \"help\" for more.");
 
