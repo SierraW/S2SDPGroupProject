@@ -33,20 +33,6 @@ public class InGameDebugger {
         String[] rawC = comm.split(" ");
 
         switch (rawC[0]) {
-            case "player":
-                if (rawC[1].matches("\\d{1,2}")) {
-                    int pIndex = Integer.parseInt(rawC[1]);
-                    if (!(pIndex > game.players.size() - 1)) {
-                        if (rawC[2].equals("cards")) {
-                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDONE));
-                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTWO));
-                            System.out.println(game.players.get(pIndex).viewPlayer(GameStatus.ROUNDTHREE));
-
-                        } else {
-                            System.out.println("Bad Command, InGameDebugger switchCommand player num ???");
-                        }
-                    }
-                }
             case "display":
             case "dis":
                 game.viewCardSet();
@@ -54,9 +40,9 @@ public class InGameDebugger {
             case "view":
                 if (rawC[1].matches("\\d{1,2}")) {
                     int pIndex = Integer.parseInt(rawC[1]);
-                    if (!(pIndex > game.players.size() - 1)) {
-                        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
-                        newCards.addAll(game.players.get(pIndex).getCards());
+                    if (!(pIndex > game.getPlayers().size() - 1)) {
+                        ArrayList<Card> newCards = new ArrayList<>(game.getDeskPlayer().getCards());
+                        newCards.addAll(game.getPlayers().get(pIndex).getCards());
                         CardCheck cardCheck = new CardCheck();
                         cardCheck.checkRanking(newCards);
                     }
@@ -67,9 +53,9 @@ public class InGameDebugger {
             case "sort":
                 if (rawC[1].matches("\\d{1,2}")) {
                     int pIndex = Integer.parseInt(rawC[1]);
-                    if (!(pIndex > game.players.size() - 1)) {
-                        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
-                        newCards.addAll(game.players.get(pIndex).getCards());
+                    if (!(pIndex > game.getPlayers().size() - 1)) {
+                        ArrayList<Card> newCards = new ArrayList<>(game.getDeskPlayer().getCards());
+                        newCards.addAll(game.getPlayers().get(pIndex).getCards());
                         CardCheck cardCheck = new CardCheck();
                         cardCheck.sortByIndex(newCards);
                         for (Card card : newCards) {
@@ -104,18 +90,18 @@ public class InGameDebugger {
                 break;
             case "set":
                 try {
-                    game.players.get(Integer.parseInt(rawC[1])).debugGetCards().set(Integer.parseInt(rawC[2]), new Card(Integer.parseInt(rawC[3])));
+                    game.getPlayers().get(Integer.parseInt(rawC[1])).debugGetCards().set(Integer.parseInt(rawC[2]), new Card(Integer.parseInt(rawC[3])));
                 } catch (Exception e){
                     System.out.println("Unknown Command");
                 }
                 break;
             case "print":
             case "pt":
-                System.out.println(game.displayGameTable(GameStatus.DEBUG));
+                System.out.println(game.displayGameTable());
                 break;
             case "desk":
                 try {
-                    game.deskCards.debugGetCards().set(Integer.parseInt(rawC[1]), new Card(Integer.parseInt(rawC[2])));
+                    game.debugGetDeskPlayer().debugGetCards().set(Integer.parseInt(rawC[1]), new Card(Integer.parseInt(rawC[2])));
                 } catch (Exception e){
                     System.out.println("Unknown Command");
                 }
@@ -178,8 +164,8 @@ public class InGameDebugger {
     }
     
     private ArrayList<Card> combineCards(int playerIndex) {
-        ArrayList<Card> newCards = new ArrayList<>(game.deskCards.getCards());
-        newCards.addAll(game.players.get(playerIndex).getCards());
+        ArrayList<Card> newCards = new ArrayList<>(game.getDeskPlayer().getCards());
+        newCards.addAll(game.getPlayers().get(playerIndex).getCards());
         return newCards;
     }
 

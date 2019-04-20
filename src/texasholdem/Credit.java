@@ -3,9 +3,9 @@ package texasholdem;
 public class Credit {
     int total;
     int round;
-    int roundOne;
-    int roundTwo;
-    int roundThree;
+    private int roundOne;
+    private int roundTwo;
+    private int roundThree;
 
     Credit() {
         total = 0;
@@ -13,6 +13,14 @@ public class Credit {
         roundOne = 0;
         roundTwo = 0;
         roundThree = 0;
+    }
+
+    Credit(int roundOne, int roundTwo, int roundThree) {
+        this.roundOne = roundOne;
+        this.roundTwo = roundTwo;
+        this.roundThree = roundThree;
+        this.round = roundOne+ roundTwo + roundThree;
+        this.total = this.round;
     }
 
     int difference(int highestBet, GameStatus round) throws IllegalArgumentException {
@@ -29,16 +37,16 @@ public class Credit {
     }
 
     boolean place(int highestBet, int amount, GameStatus round) {
+        if (round != GameStatus.ROUNDONE && round != GameStatus.ROUNDTWO && round != GameStatus.ROUNDTHREE) {
+            return false;
+        }
+
         if (amount == 0) {
             if (difference(highestBet, round) == 0) {
                 return true;
             }
 
-            if (total == 0) {
-                return true;
-            }
-
-            return false;
+            return (total == 0);
         }
         if (amount >= difference(highestBet, round)) {
             if (total - amount < 0) {
@@ -68,7 +76,7 @@ public class Credit {
         roundThree = 0;
     }
 
-    int creditAt(GameStatus round) throws IllegalArgumentException{
+    int creditAt(GameStatus round) {
         switch (round) {
             case ROUNDONE:
                 return roundOne;
@@ -76,10 +84,8 @@ public class Credit {
                 return roundTwo;
             case ROUNDTHREE:
                 return roundThree;
-            case CHECK:
-                return this.round;
             default:
-                throw new IllegalArgumentException("InvalidCall");
+                return this.round;
         }
     }
 

@@ -44,16 +44,19 @@ public class Card implements Comparable<Card>{
         this.faceUp = faceUp;
     }
 
-    public String printCard() {
-        if (!isFaceUp()) {
-            return " 🎴 ";
+    public String printCard(boolean isForceViewCard) {
+        if (isForceViewCard) {
+            return this.SUIT.toString()+this.VALUE.toString();
         }
-        return this.toString();
+        if (!isFaceUp()) {
+            return "🎴";
+        }
+        return this.SUIT.toString()+this.VALUE.toString();
     }
 
     @Override
     public String toString() {
-        return this.SUIT.toString()+this.VALUE.toString();
+        return printCard(false);
     }
 
     public static class Comparators {

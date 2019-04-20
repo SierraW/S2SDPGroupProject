@@ -6,7 +6,7 @@ public class Tester {
         InputHandleSystem input = new InputHandleSystem();
 
         System.out.println("Welcomes Message");
-
+        game.viewGameTable();
         while (!game.isEnded()) {
             game.comm(input.getLine("game:\\"));
         }

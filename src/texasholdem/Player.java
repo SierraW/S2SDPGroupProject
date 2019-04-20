@@ -16,7 +16,7 @@ public class Player implements Comparable<Player> {
         return o.cardPoint.compareTo(this.cardPoint);
     }
 
-    public Player() {
+    Player() {
         INDEX = indexGenerator();
         cards = new ArrayList<>();
         credit = new Credit();
@@ -26,55 +26,22 @@ public class Player implements Comparable<Player> {
         cardPoint = "";
     }
 
-    String viewPlayer(GameStatus round) {
-        String outStr = "";
-        if (INDEX != 0) {
-            outStr += ( name + " (Player " + INDEX + "): ");
-        }
-        for (Card card : cards) {
-            if (card != null && active) {
-                outStr += (card.printCard() + " ");
-            } else {
-                outStr += ("  ");
-            }
-        }
-        switch (round) {
-            case BREAK:
-                outStr += ("    Player total credit: " + credit.total + "\n");
-                break;
-            case CHECK:
-                outStr += ("Total bet: " + credit.round + "    Player total credit: " + credit.total + "\n");
-                break;
-                default:
-                    outStr += ("Total bet: " + credit.round + "    current round credit: " + credit.creditAt(round)+ "    Player total credit: " + credit.total + "\n");
-        }
-        return outStr;
+    Player(Credit credit) {
+        INDEX = indexGenerator();
+        cards = new ArrayList<>();
+        this.credit = credit;
+        name = "";
+        active = true;
+        cardPoint = "";
     }
 
-    String viewPlayerCard() {
-        String outSt = "";
-        if (INDEX == 0) {
-            outSt += "Desk:    ";
-        } else {
-            outSt += (name + " (Player " + INDEX + "): ");
-        }
-        for (Card card : cards) {
-            if (card != null) {
-                outSt += (card.printCard() + " ");
-            }
-        }
-        if (INDEX == 0) {
-            outSt += "Pool: " + this.credit.total + "\n";
-        }
-        return outSt + "\n";
-    }
-
-    String viewCard() {
-        String outStr = "";
-        for (Card card : cards) {
-            outStr += (card.toString() + " ");
-        }
-        return outStr;
+    Player(Player player) {
+        this.INDEX = player.getINDEX();
+        this.cards = player.getCards();
+        this.credit = player.getCreditObj();
+        this.name = player.getName();
+        this.active = player.isActive();
+        this.cardPoint = player.getCardPoint();
     }
 
     public ArrayList<Card> getCards() {
@@ -113,20 +80,6 @@ public class Player implements Comparable<Player> {
         this.name = name;
     }
 
-    public void playRound(int highest, GameStatus round) throws Exception {
-        System.out.print(name + " (Player " + INDEX + ") :\nYour Card:    ");
-        System.out.println(this.viewCard());
-        System.out.println("Your credit: " + credit.total + "  round highest bet: " + highest);
-        System.out.println("Your current bet: " + credit.creditAt(round));
-
-        while (!(credit.place(highest, inputHandleSystem.getInt("how many bets you want to add? (at least " + credit.difference(highest, round) + "): \n", Domain.hasMinimum, 0), round))) {
-            if (inputHandleSystem.getChar("bad input, you sure you want to exit this game? (y/n)\n", 'y', 'n') == 'y') {
-                active = false;
-                return;
-            }
-        }
-    }
-
     public boolean isActive() {
         return active;
     }
@@ -159,8 +112,26 @@ public class Player implements Comparable<Player> {
         this.credit.total += credit;
     }
 
+    public boolean placeCredit(int highestBet, int amount, GameStatus round) {
+        return this.credit.place(highestBet, amount, round);
+    }
+
+    Credit getCreditObj() {
+        return credit;
+    }
+
+    void setCredit(Credit credit){
+        if (INDEX == 0) {
+            this.credit = credit;
+        }
+    }
+
     public void resetRoundCredit() {
         this.credit.resetRoundCredit();
+    }
+
+    public Player clone() {
+        return new Player(this);
     }
 
     static int indexFactory = 0;

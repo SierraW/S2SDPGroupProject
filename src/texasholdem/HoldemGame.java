@@ -5,39 +5,48 @@ import java.util.ArrayList;
 public class HoldemGame {
 
     private PlayingCards playingCards;
-    ArrayList<Player> players;
-    Player deskCards;
+    private ArrayList<Player> players;
+    private Player deskCards;
     private int numbersOfPlayers;
     private GameStatus status;
     private int sBlindBets;
-    private InGameDebugger debugger;
     private Player currentPlayer;
-    private int startsAt;
     private int gameCount;
+    private int count;
+    private int activePlayersCount;
+    private int roundHighest;
+    private ArrayList<Player> winners;
+    private int startsAt;
 
     HoldemGame() {
         numbersOfPlayers = 4;
         setPlayers(numbersOfPlayers);
         newGame();
-        startsAt = 0;
-        debugger = new InGameDebugger(this);
         gameCount = 0;
+        sBlindBets = 2;
+        startsAt = 0;
     }
 
-    public void newGame() throws IllegalStateException{
+    private void reset() {
+        count = 0;
+        activePlayersCount = 0;
+        roundHighest = 0;
+        winners = new ArrayList<>();
+    }
+
+    public void newGame() throws IllegalStateException {
         Player.indexFactory = 0;
         playingCards = new PlayingCards();
         deskCards = new Player();
         deskCards.setTotalCredit(0);
+        deskCards.resetRoundCredit();
         status = GameStatus.BREAK;
-        sBlindBets = 2;
         gameCount += 1;
-        currentPlayer = players.get(startsAt);
         for (Player player : players) {
             player.clearCards();
             int count = 0;
             if (player.getCredit() > sBlindBets) {
-                count+=1;
+                count += 1;
                 player.setActive(true);
                 player.resetRoundCredit();
             }
@@ -45,24 +54,37 @@ public class HoldemGame {
                 throw new IllegalStateException("Not enough players");
             }
         }
+        currentPlayer = players.get(startsAt);
+        reset();
+    }
+
+    public int getRoundHighest() {
+        return roundHighest;
     }
 
     public int getGameCount() {
         return gameCount;
     }
 
-    public int getStartsAt() {
-        return startsAt;
-    }
-
-    public void setStartsAt(int startsAt) throws IllegalArgumentException{
+    public void setStartsAt(int startsAt) throws IllegalArgumentException {
         if (startsAt >= players.size() || startsAt < 0) {
             throw new IllegalArgumentException("HoldemGame: set current player failed at " + startsAt);
         }
         this.startsAt = startsAt;
     }
 
-    public void setPlayers(int numbersOfPlayers) throws IllegalArgumentException{
+    public void removePlayer(int playerIndex) {
+        if (playerIndex > players.size() || playerIndex < 1) {
+            throw new IllegalArgumentException("HoldemGame: remove player failed at " + playerIndex);
+        }
+        if (status != GameStatus.BREAK) {
+            throw new IllegalStateException("HoldemGame: remove player failed at " + playerIndex + ". Game is currently running!");
+        }
+        players.remove(playerIndex - 1);
+        fixPlayersIndex();
+    }
+
+    public void setPlayers(int numbersOfPlayers) throws IllegalArgumentException {
         if (numbersOfPlayers < 2) {
             throw new IllegalArgumentException("HoldemGame: set total players failed at " + numbersOfPlayers);
         }
@@ -72,6 +94,10 @@ public class HoldemGame {
         for (int i = 0; i < numbersOfPlayers; i++) {
             players.add(new Player());
         }
+    }
+
+    public ArrayList<Player> getPlayers() { // todo may cause safety issue
+        return players;
     }
 
     public boolean addPlayersCredit(int playerIndex, int credit) throws IllegalArgumentException {
@@ -85,14 +111,7 @@ public class HoldemGame {
         return true;
     }
 
-    public String viewPlayer(int playerIndex) throws IllegalArgumentException{
-        if (playerIndex < 1 || playerIndex > numbersOfPlayers) {
-            throw new IllegalArgumentException("Hold\'emGame: view players failed at player " + playerIndex);
-        }
-        return players.get(playerIndex - 1).viewPlayer(GameStatus.BREAK);
-    }
-
-    public boolean setName(int playerIndex, String name) throws IllegalArgumentException{
+    public boolean setName(int playerIndex, String name) throws IllegalArgumentException {
         if (playerIndex < 1 || playerIndex > numbersOfPlayers) {
             throw new IllegalArgumentException("Hold\'emGame: set name failed at player " + playerIndex);
         }
@@ -103,7 +122,7 @@ public class HoldemGame {
         return true;
     }
 
-    public String getName(int playerIndex) throws IllegalArgumentException{
+    public String getName(int playerIndex) throws IllegalArgumentException {
         if (playerIndex < 1 || playerIndex > numbersOfPlayers) {
             throw new IllegalArgumentException("Hold\'emGame: set name failed at player " + playerIndex);
         }
@@ -125,27 +144,65 @@ public class HoldemGame {
         this.status = status;
     }
 
-    public void run() throws Exception {
-        if (status == GameStatus.ROUNDONE) {
-            currentPlayer = players.get(startsAt);
-            roundOne(GameStatus.ROUNDONE);
-        }
-        if (status == GameStatus.ROUNDTWO) {
-            roundTwo();
-        }
-        if (status == GameStatus.ROUNDTHREE) {
-            roundThree();
-        }
-        if (status == GameStatus.CHECK) {
-            System.out.println(startRoundMessage(GameStatus.CHECK));
-            System.out.println(gameEnd());
-        }
+    public GameStatus getStatus() {
+        return status;
     }
 
-    private void roundOne(GameStatus round) throws Exception {
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
 
-        playingCards.shuffleCards();
-        int roundHighest = sBlindBets;
+    public Player getDeskPlayer() {
+        return deskCards.clone();
+    }
+
+    Player debugGetDeskPlayer() {
+        return deskCards;
+    }
+
+    private void removeBadPlayer() {
+        for (Player player : players) {
+            if (player.getCredit() < sBlindBets) {
+                players.remove(player);
+            }
+        }
+        fixPlayersIndex();
+    }
+
+    private void fixPlayersIndex() {
+        ArrayList<Player> newPlayers = new ArrayList<>();
+        for (Player player : players) {
+            newPlayers.add(new Player(player.getCreditObj()));
+        }
+        players = newPlayers;
+    }
+
+    public boolean run() throws Exception {
+        if (status == GameStatus.BREAK) {
+            removeBadPlayer();
+            if (players.size() < 2) {
+                throw new IllegalStateException("Too less players!");
+            }
+            if (count != 0 || activePlayersCount != 0) return false;
+
+            currentPlayer = getNextPlayer();
+            roundOne();
+            status = GameStatus.ROUNDONE;
+        } else if (status == GameStatus.ROUNDONE) {
+            return playerLoops();
+        }
+        if (status == GameStatus.ROUNDTWO) {
+            return playerLoops();
+        }
+        if (status == GameStatus.ROUNDTHREE) {
+            return playerLoops();
+        }
+        return false;
+    }
+
+    private void roundOne() throws Exception {
+
+        roundHighest = sBlindBets;
 
         for (int i = 0; i < 5; i++) {
             deskCards.passCard(playingCards.getFirstCard());
@@ -161,11 +218,6 @@ public class HoldemGame {
                 player.passCard(card);
             }
         }
-
-        System.out.println(startRoundMessage(round));
-        System.out.println(displayGameTable(round));
-
-        playerLoops(round, roundHighest);
     }
 
     private void roundTwo() throws Exception {
@@ -176,10 +228,6 @@ public class HoldemGame {
         }
 
         deskCards.changeCardFaceAt(3);
-        System.out.println(startRoundMessage(GameStatus.ROUNDTWO));
-        System.out.println(displayGameTable(GameStatus.ROUNDTWO));
-
-        playerLoops(GameStatus.ROUNDTWO, 0);
     }
 
     private void roundThree() throws Exception {
@@ -190,15 +238,6 @@ public class HoldemGame {
         }
 
         deskCards.changeCardFaceAt(4);
-        System.out.println(startRoundMessage(GameStatus.ROUNDTHREE));
-        System.out.println(displayGameTable(GameStatus.ROUNDTHREE));
-
-        playerLoops(GameStatus.ROUNDTHREE, 0);
-    }
-
-    private void checkCards() {
-        System.out.println(displayGameTable(GameStatus.CHECK));
-        ArrayList<Card> cards = new ArrayList<>();
     }
 
     private boolean oneAndOnly() {
@@ -211,127 +250,95 @@ public class HoldemGame {
         return count == 1;
     }
 
-    private void playerLoops(GameStatus round, int roundHighest) throws Exception {
-        int count = 0;
-        int activePlayersCount = 0;
-        for (Player player: players){
+    private boolean playerLoops() throws Exception {
+        if (currentPlayer.getRoundCredit(status) < roundHighest) {
+            currentPlayer.setActive(false);
+            currentPlayer = getNextPlayer();
+            return true;
+        }
+
+        activePlayersCount = 0;
+        for (Player player : players) {
             if (player.isActive()) {
                 activePlayersCount++;
             }
         }
-        while (count < activePlayersCount || !currentPlayer.isActive() || currentPlayer.getRoundCredit(round) != roundHighest) {
+
+        if (count++ < activePlayersCount - 1 || currentPlayer.getRoundCredit(status) != roundHighest) {
+            if (!currentPlayer.isActive()) { //todo remove fail safe
+                currentPlayer = getNextPlayer();
+            }
+
+            //check active
+            if (oneAndOnly()) {
+                status = GameStatus.CHECK;
+                return true;
+            }
+            //start
+            roundHighest = currentPlayer.getRoundCredit(status);
+            currentPlayer = getNextPlayer();
+
             //big blind bets
-            if (count++ == 1 && round == GameStatus.ROUNDONE) {
+            if (count == 1 && status == GameStatus.ROUNDONE) {
                 if (roundHighest < sBlindBets * 2) {
                     roundHighest = sBlindBets * 2;
                 }
             }
-            //check active
-            if (oneAndOnly()) {
-                status = GameStatus.CHECK;
-                break;
-            }
-            if (!currentPlayer.isActive()) {
-                currentPlayer = getNextPlayer();
-                continue;
-            }
-            //start
-            debugger.getInput("\n\n\nPass to player " + currentPlayer.getINDEX() + "\n\n\ntype enter to continue.\n\n\n"); //todo remove debug
-            if (status == GameStatus.BREAK) {
-                break;
-            }
-            System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + displayGameTable(round, true));
-            currentPlayer.playRound(roundHighest, round);
-            if (!currentPlayer.isActive()) {
-                currentPlayer = getNextPlayer();
-                System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-                continue;
-            }
-            roundHighest = currentPlayer.getRoundCredit(round);
 
-            currentPlayer = getNextPlayer();
-            System.out.print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-
-            deskCards.setTotalCredit(getPoolCredit()); //todo can be better
+            setPoolCredit(); //todo can be better
+            return true;
         }
 
-        if (currentPlayer.getRoundCredit(round) == roundHighest && currentPlayer.isActive()) {
-
+        if (currentPlayer.isActive()) {
             switch (status) {
                 case ROUNDONE:
                     status = GameStatus.ROUNDTWO;
+                    reset();
+                    roundTwo();
                     break;
                 case ROUNDTWO:
                     status = GameStatus.ROUNDTHREE;
+                    reset();
+                    roundThree();
                     break;
                 case ROUNDTHREE:
                     status = GameStatus.CHECK;
+                    reset();
+                    System.out.println(gameEnd());
                     break;
             }
         }
+        return true;
     }
 
-    private int getPoolCredit() { //todo can be better
-        int cr = 0;
+    public boolean placeBet(int bets) {
+        return currentPlayer.placeCredit(roundHighest, bets, status);
+    }
+
+    private void setPoolCredit() { //todo can be better
+        int c1 = 0;
+        int c2 = 0;
+        int c3 = 0;
         for (Player player : players) {
-            cr += player.getRoundCredit(GameStatus.CHECK);
+            c1 += player.getRoundCredit(GameStatus.ROUNDONE);
+            c2 += player.getRoundCredit(GameStatus.ROUNDTWO);
+            c3 += player.getRoundCredit(GameStatus.ROUNDTHREE);
         }
-        return cr;
+        deskCards.setCredit(new Credit(c1, c2, c3));
     }
 
-    public void setsBlindBets(int sBlindBets) throws IllegalArgumentException{
+    public void setsBlindBets(int sBlindBets) throws IllegalArgumentException {
         if (sBlindBets < 0 || sBlindBets > 0xf3f3f3) {
             throw new IllegalArgumentException("Hold\'emGame: set blind bet failed " + sBlindBets);
         }
         this.sBlindBets = sBlindBets;
     }
 
-    String displayGameTable(GameStatus round) {
-        return displayGameTable(round, false);
-    }
-
-    String displayGameTable(GameStatus round, boolean inPlayingRound) {
+    String displayGameTable() { // todo remove debug
         String outStr = "";
-        if (round == GameStatus.DEBUG) {
-            outStr += deskCards.viewCard();
-            for (Player player : players) {
-                outStr += player.viewCard();
-            }
-
-            return outStr + "\n";
-        }
-
-        if (round == GameStatus.CHECK || round == GameStatus.BREAK) {
-
-            for (Player player : players) {
-                if (round == GameStatus.BREAK && player.equals(currentPlayer)) {
-                    outStr += "🔘";
-                } else {
-                    outStr += " ";
-                }
-                outStr += player.viewPlayer(round);
-            }
-
-            if (round == GameStatus.BREAK) {
-                outStr += "\nBlind bet: " + sBlindBets;
-            }
-
-            return outStr + "\n";
-        }
-
-        outStr += ("Round " + round.ordinal() + "\n");
-        outStr += deskCards.viewPlayerCard();
-
+        outStr += GameVisualizer.viewCard(deskCards.getCards());
         for (Player player : players) {
-            if (inPlayingRound) {
-                if (currentPlayer == player) {
-                    outStr += "       >>>>>>>Your Turn<<<<<<<\n";
-                } else {
-                    outStr += player.viewPlayer(round);
-                }
-            } else {
-                outStr += player.viewPlayer(round);
-            }
+            outStr += GameVisualizer.viewCard(player.getCards());
         }
 
         return outStr + "\n";
@@ -350,13 +357,26 @@ public class HoldemGame {
     }
 
     private Player getNextPlayer() {
-        if (currentPlayer.getINDEX() + 1 > players.size()) {
-            // index 0
-            return players.get(0);
-        } else {
-            // index ++
-            return players.get(currentPlayer.getINDEX());
+        boolean justPassPreviousPlayer = false;
+        for (Player player : players) {
+            if (justPassPreviousPlayer) {
+                if (player.isActive()) {
+                    return player;
+                }
+            }
+
+            if (player.getINDEX() == currentPlayer.getINDEX()) {
+                justPassPreviousPlayer = true;
+            }
         }
+        for (Player player : players) {
+            if (justPassPreviousPlayer) {
+                if (player.isActive()) {
+                    return player;
+                }
+            }
+        }
+        return currentPlayer;
     }
 
     String gameEnd() {
@@ -380,11 +400,11 @@ public class HoldemGame {
                 outStr += (card.toString() + " ");
             }
             outStr += "+ ";
-            for (Card card: deskCards.getCards()) {
+            for (Card card : deskCards.getCards()) {
                 outStr += (card.toString() + " ");
             }
-            outStr += "\nbest sets: "+result.VALUE.name()+" best five cards:\n";
-            for (Card card: result.CARDS) {
+            outStr += "\nbest sets: " + result.VALUE.name() + " best five cards:\n";
+            for (Card card : result.CARDS) {
                 outStr += (card.toString() + " ");
             }
             outStr += "\n\n";
@@ -392,31 +412,28 @@ public class HoldemGame {
 
         remainingPlayers.sort(null);
 
-        ArrayList<Player> winningPlayers = new ArrayList<>();
+        winners = new ArrayList<>();
 
-
-        winningPlayers.add(remainingPlayers.get(0));
+        winners.add(remainingPlayers.get(0));
         for (int i = 0; i < remainingPlayers.size() - 1; i++) {
             if (remainingPlayers.get(i).getCardPoint().equals(remainingPlayers.get(i + 1).getCardPoint())) {
-                winningPlayers.add(remainingPlayers.get(i + 1));
+                winners.add(remainingPlayers.get(i + 1));
             }
         }
 
-        if (winningPlayers.size() == 1) {
-            outStr += (winningPlayers.get(0).getName() + " (Player " + winningPlayers.get(0).getINDEX() + ") won\n");
+        if (winners.size() == 1) {
+            outStr += (winners.get(0).getName() + " (Player " + winners.get(0).getINDEX() + ") won\n");
             remainingPlayers.get(0).setCredit(deskCards.getCredit());
             deskCards.setTotalCredit(0);
         } else {
             outStr += ("Multiple winner!\n");
-            for (Player player : winningPlayers) {
+            for (Player player : winners) {
                 outStr += (player.getName() + " Player " + player.getINDEX() + ")\n"); //todo make it better
-                outStr += player.viewPlayerCard() + "\n";
-                player.setCredit(deskCards.getCredit() / winningPlayers.size());
+                GameVisualizer.viewPlayer(status, player);
+                player.setCredit(deskCards.getCredit() / winners.size());
             }
             deskCards.setTotalCredit(0);
         }
-
-        outStr += displayGameTable(GameStatus.CHECK);
 
         return outStr;
     }
@@ -427,68 +444,5 @@ public class HoldemGame {
         return newCards;
     }
 
-    private String startRoundMessage(GameStatus round) {
-        String str = "";
-        switch (round) {
-            case ROUNDONE:
-                str += "=========================================" + "\n" +
-                        "====       =================   ==========" +"\n" +
-                        "====  =====  ==============    ==========" +"\n" +
-                        "====  ======  ============  =  ==========" +"\n" +
-                        "====  =======  ==========  ==  ==========" +"\n" +
-                        "====  ======  ===============  ==========" +"\n" +
-                        "====  ====  =================  ==========" +"\n" +
-                        "====      ===================  ==========" +"\n" +
-                        "====   ======================  ==========" +"\n" +
-                        "====  =  ====================  ==========" +"\n" +
-                        "====  ===  ==================  ==========" +"\n" +
-                        "====  ====  =================  ==========" +"\n" +
-                        "====  =====  ================  ==========" +"\n" +
-                        "====  ======  ===============  ==========" +"\n" +
-                        "====  =======  ============      ========" +"\n" +
-                        "=========================================";
 
-                break;
-            case ROUNDTWO:
-                str += "=========================================" + "\n" +
-                        "====       =============       ==========" +"\n" +
-                        "====  =====  =========  ======  =========" +"\n" +
-                        "====  ======  =======  ========  ========" +"\n" +
-                        "====  =======  =================  =======" +"\n" +
-                        "====  ======  =================  ========" +"\n" +
-                        "====  ====  ==================  =========" +"\n" +
-                        "====      ===================  ==========" +"\n" +
-                        "====   =====================  ===========" +"\n" +
-                        "====  =  ==================  ============" +"\n" +
-                        "====  ===  ===============  =============" +"\n" +
-                        "====  ====  =============  ==============" +"\n" +
-                        "====  =====  ===========  ===============" +"\n" +
-                        "====  ======  =========  ================" +"\n" +
-                        "====  =======  =======           ========" +"\n" +
-                        "=========================================";
-                break;
-            case ROUNDTHREE:
-                str += "=========================================" + "\n" +
-                        "====       =============       ==========" +"\n" +
-                        "====  =====  =========  ======  =========" +"\n" +
-                        "====  ======  =======  ========  ========" +"\n" +
-                        "====  =======  =================  =======" +"\n" +
-                        "====  ======  =================  ========" +"\n" +
-                        "====  ====  ==================  =========" +"\n" +
-                        "====      ===================  ==========" +"\n" +
-                        "====   =====================  ===========" +"\n" +
-                        "====  =  ====================  ==========" +"\n" +
-                        "====  ===  ===================  =========" +"\n" +
-                        "====  ====  ===================  ========" +"\n" +
-                        "====  =====  ========  =========  =======" +"\n" +
-                        "====  ======  ========  =======  ========" +"\n" +
-                        "====  =======  ========         =========" +"\n" +
-                        "=========================================";
-                break;
-            case CHECK:
-                str += "Game FIN!";
-                break;
-        }
-        return str;
-    }
 }
