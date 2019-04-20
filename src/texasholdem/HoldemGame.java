@@ -71,10 +71,22 @@ public class HoldemGame {
     }
 
     public void setStartsAt(int startsAt) throws IllegalArgumentException {
-        if (startsAt >= players.size() || startsAt < 0) {
+        if (startsAt > players.size() || startsAt < 1) {
             throw new IllegalArgumentException("HoldemGame: set current player failed at " + startsAt);
         }
-        this.startsAt = startsAt;
+        switch (--startsAt) {
+            case 0:
+                this.startsAt = 3;
+                break;
+            case 1:
+                this.startsAt = 0;
+                break;
+            case 2:
+                this.startsAt = 1;
+                break;
+            default:
+                this.startsAt = 2;
+        }
     }
 
     public void removePlayer(int playerIndex) {
@@ -89,7 +101,7 @@ public class HoldemGame {
     }
 
     public void setPlayers(int numbersOfPlayers) throws IllegalArgumentException {
-        if (numbersOfPlayers < 2) {
+        if (numbersOfPlayers < 2 || numbersOfPlayers > 10) {
             throw new IllegalArgumentException("HoldemGame: set total players failed at " + numbersOfPlayers);
         }
         this.numbersOfPlayers = numbersOfPlayers;

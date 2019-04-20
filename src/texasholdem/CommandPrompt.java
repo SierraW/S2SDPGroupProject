@@ -51,11 +51,14 @@ public class CommandPrompt {
                 game.shuffle();
                 System.out.println("Successfully shuffled.");
                 if (rawComm.length > 1) {
-                    if (!rawComm[1].equals("run") && !rawComm[0].equals("srun")) {
+                    if (!(rawComm[1].equals("run") || rawComm[0].equals("srun"))) {
+                        System.out.println(rawComm[0]);
                         break;
                     }
                 } else {
-                    break;
+                    if (!rawComm[0].equals("srun")) {
+                        break;
+                    }
                 }
             case "run":
                 hasRan = true;
@@ -140,10 +143,10 @@ public class CommandPrompt {
                 end = true;
                 break;
             case "help":
-                System.out.println("shuffle\nsrun\nrun\nstart\nrunOnce\nhelp\nset [numbers of player]\ncredit [player index starts at 1] [amounts of credit]\n" +
-                        "addcredit [player index starts at 1] [amount of credit]\nprint (display card set at borad)\nviewplayer [player index starts at 1]\n" +
-                        "display (view all players)\nnewcard\nsetname [player index starts at 1] [name]\nsmallblindbet [amount of blind bet]\n" +
-                        "startsat [player index]\n");
+                System.out.println("Main game commands:\n\nshuffle (shuffle cards)\nsrun (shuffle and initial the game)\nrun (initial the game, can be initial more times to change the starter player)\nstart (start until the game ends)\nrunOnce (only run one turn)\nsmallblindbet [amount of blind bet] (change the amount of the small blind bet)\n\n\nCard sets commands:\n\nprint (display card set at the board)\nnewcard (replace current card set with a new card set)\nviewplayer [player index starts at 1] (view specific player)\n\n\n" +
+                        "Player commands:\n\ndisplay (view all players)\nset [numbers of player] (set the player amount)\ncredit [player index starts at 1] [amounts of credit] (set credit for player)\n" +
+                "addcredit [player index starts at 1] [amount of credit] (add credit for player)\nsetname [player index starts at 1] [name] (set name for the player)\n" +
+                        "startsat [player index] (change the first start position, please re-initialize the game after change)\n\n\nEnvironment:\n\nasciimode (if your computer not support emoji)\nemojimode (default mode)\n");
                 break;
             case "set":
                 try {
@@ -151,7 +154,7 @@ public class CommandPrompt {
                     game.setPlayers(numbersOfPlayers);
                     System.out.println("Successfully set to " + numbersOfPlayers + " players.");
                 } catch (Exception e) {
-                    System.out.println("set number of players unsuccessful, try again.");
+                    System.out.println("set number of players unsuccessful (min players: 2, max players: 10), try again.");
                 }
                 break;
             case "credit":
@@ -246,10 +249,12 @@ public class CommandPrompt {
                 }
                 break;
             case "asciimode":
+            case "ascii":
                 gv.setASCIIMode(true);
                 System.out.println("Enter ASCII mode.");
                 break;
             case "emojimode":
+            case "emoji":
                 gv.setASCIIMode(false);
                 System.out.println("Enter Emoji mode.");
                 break;
